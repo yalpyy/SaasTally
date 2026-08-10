@@ -1,5 +1,3 @@
-import { Fragment } from "react";
-
 /**
  * Intentionally tiny Markdown-subset renderer.
  *
@@ -9,14 +7,19 @@ import { Fragment } from "react";
  * later without a migration, and it never injects raw HTML.
  */
 type Block =
-  | { kind: "h2" | "h3" | "p"; text: string }
-  | { kind: "ul" | "ol"; items: string[] };
+  | { kind: "h2"; text: string }
+  | { kind: "h3"; text: string }
+  | { kind: "p"; text: string }
+  | { kind: "ul"; items: string[] }
+  | { kind: "ol"; items: string[] };
+
+type ListBlock = Extract<Block, { items: string[] }>;
 
 function parse(markdown: string): Block[] {
   const blocks: Block[] = [];
   const lines = markdown.replace(/\r\n/g, "\n").split("\n");
   let paragraph: string[] = [];
-  let list: { kind: "ul" | "ol"; items: string[] } | null = null;
+  let list: ListBlock | null = null;
 
   const flushParagraph = () => {
     if (paragraph.length > 0) {
@@ -87,54 +90,58 @@ function parse(markdown: string): Block[] {
   return blocks;
 }
 
+function ListItems({ items }: { items: string[] }) {
+  return (
+    <>
+      {items.map((item, itemIndex) => (
+        <li key={itemIndex} className="text-[15px] leading-relaxed text-muted">
+          {item}
+        </li>
+      ))}
+    </>
+  );
+}
+
 export function Markdown({ content }: { content: string }) {
   const blocks = parse(content);
 
   return (
     <div className="space-y-5">
       {blocks.map((block, index) => {
-        if (block.kind === "ul" || block.kind === "ol") {
-          const items = block.items.map((item, itemIndex) => (
-            <li
-              key={itemIndex}
-              className="text-[15px] leading-relaxed text-muted"
-            >
-              {item}
-            </li>
-          ));
-
-          return (
-            <Fragment key={index}>
-              {block.kind === "ul" ? (
-                <ul className="ml-5 list-disc space-y-2">{items}</ul>
-              ) : (
-                <ol className="ml-5 list-decimal space-y-2">{items}</ol>
-              )}
-            </Fragment>
-          );
+        switch (block.kind) {
+          case "h2":
+            return (
+              <h2 key={index} className="pt-4 text-xl font-semibold sm:text-2xl">
+                {block.text}
+              </h2>
+            );
+          case "h3":
+            return (
+              <h3 key={index} className="pt-2 text-lg font-semibold">
+                {block.text}
+              </h3>
+            );
+          case "p":
+            return (
+              <p key={index} className="text-[15px] leading-relaxed text-muted">
+                {block.text}
+              </p>
+            );
+          case "ul":
+            return (
+              <ul key={index} className="ml-5 list-disc space-y-2">
+                <ListItems items={block.items} />
+              </ul>
+            );
+          case "ol":
+            return (
+              <ol key={index} className="ml-5 list-decimal space-y-2">
+                <ListItems items={block.items} />
+              </ol>
+            );
+          default:
+            return null;
         }
-
-        if (block.kind === "h2") {
-          return (
-            <h2 key={index} className="pt-4 text-xl font-semibold sm:text-2xl">
-              {block.text}
-            </h2>
-          );
-        }
-
-        if (block.kind === "h3") {
-          return (
-            <h3 key={index} className="pt-2 text-lg font-semibold">
-              {block.text}
-            </h3>
-          );
-        }
-
-        return (
-          <p key={index} className="text-[15px] leading-relaxed text-muted">
-            {block.text}
-          </p>
-        );
       })}
     </div>
   );
