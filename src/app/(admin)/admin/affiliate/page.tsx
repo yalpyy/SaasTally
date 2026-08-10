@@ -14,7 +14,7 @@ export default async function AdminAffiliatePage() {
   // Affiliate configuration is admin-only; editors never see commercial terms.
   const profile = await requireStaff("admin");
   const live = dataMode() === "live";
-  const programs = live ? [] : affiliatePrograms;
+  const programs: AffiliateProgram[] = live ? [] : affiliatePrograms;
 
   const columns: Column<AffiliateProgram>[] = [
     { key: "tool", header: "Tool", render: (program) => <span className="font-medium">{program.toolSlug}</span> },

@@ -1,13 +1,20 @@
 import "server-only";
 
 import { cookies } from "next/headers";
-import { createServerClient } from "@supabase/ssr";
+import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import {
   SUPABASE_PUBLISHABLE_KEY,
   SUPABASE_URL,
   getServiceRoleKey,
   isSupabaseConfigured,
 } from "./config";
+
+/**
+ * Shape of the cookies `@supabase/ssr` asks us to write back. Annotated
+ * explicitly because the `cookies` option is a union of method sets, which
+ * blocks TypeScript from contextually typing the callback parameter.
+ */
+type CookieToSet = { name: string; value: string; options: CookieOptions };
 
 /**
  * Request-scoped Supabase client for Server Components, Route Handlers and
@@ -27,7 +34,7 @@ export async function createServerSupabase() {
       getAll() {
         return cookieStore.getAll();
       },
-      setAll(cookiesToSet) {
+      setAll(cookiesToSet: CookieToSet[]) {
         try {
           for (const { name, value, options } of cookiesToSet) {
             cookieStore.set(name, value, options);
