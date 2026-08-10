@@ -2,13 +2,13 @@ import "server-only";
 
 import { affiliatePrograms as fixturePrograms } from "@/data/affiliate-programs";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
-import { createServerSupabase, createServiceSupabase } from "@/lib/supabase/server";
+import { createReadSupabase, createServiceSupabase } from "@/lib/supabase/server";
 import type { AffiliateProgram } from "@/types";
 
 /** Resolve the single active affiliate program for a tool, if one exists. */
 export async function getActiveProgram(toolSlug: string): Promise<AffiliateProgram | null> {
   if (isSupabaseConfigured()) {
-    const supabase = await createServerSupabase();
+    const supabase = await createReadSupabase();
     if (supabase) {
       const { data } = await supabase
         .from("affiliate_programs")
