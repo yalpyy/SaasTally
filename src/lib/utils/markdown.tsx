@@ -93,6 +93,27 @@ export function Markdown({ content }: { content: string }) {
   return (
     <div className="space-y-5">
       {blocks.map((block, index) => {
+        if (block.kind === "ul" || block.kind === "ol") {
+          const items = block.items.map((item, itemIndex) => (
+            <li
+              key={itemIndex}
+              className="text-[15px] leading-relaxed text-muted"
+            >
+              {item}
+            </li>
+          ));
+
+          return (
+            <Fragment key={index}>
+              {block.kind === "ul" ? (
+                <ul className="ml-5 list-disc space-y-2">{items}</ul>
+              ) : (
+                <ol className="ml-5 list-decimal space-y-2">{items}</ol>
+              )}
+            </Fragment>
+          );
+        }
+
         if (block.kind === "h2") {
           return (
             <h2 key={index} className="pt-4 text-xl font-semibold sm:text-2xl">
@@ -100,6 +121,7 @@ export function Markdown({ content }: { content: string }) {
             </h2>
           );
         }
+
         if (block.kind === "h3") {
           return (
             <h3 key={index} className="pt-2 text-lg font-semibold">
@@ -107,28 +129,11 @@ export function Markdown({ content }: { content: string }) {
             </h3>
           );
         }
-        if (block.kind === "p") {
-          return (
-            <p key={index} className="text-[15px] leading-relaxed text-muted">
-              {block.text}
-            </p>
-          );
-        }
-
-        const items = block.items.map((item, itemIndex) => (
-          <li key={itemIndex} className="text-[15px] leading-relaxed text-muted">
-            {item}
-          </li>
-        ));
 
         return (
-          <Fragment key={index}>
-            {block.kind === "ul" ? (
-              <ul className="ml-5 list-disc space-y-2">{items}</ul>
-            ) : (
-              <ol className="ml-5 list-decimal space-y-2">{items}</ol>
-            )}
-          </Fragment>
+          <p key={index} className="text-[15px] leading-relaxed text-muted">
+            {block.text}
+          </p>
         );
       })}
     </div>
