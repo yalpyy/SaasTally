@@ -1,6 +1,6 @@
 import { categories as fixtureCategories } from "@/data/categories";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
-import { createServerSupabase } from "@/lib/supabase/server";
+import { createReadSupabase } from "@/lib/supabase/server";
 import type { CategoryRow } from "@/lib/supabase/database.types";
 import type { Category } from "@/types";
 
@@ -18,7 +18,7 @@ function mapCategoryRow(row: CategoryRow, toolCount: number): Category {
 
 async function liveCategories(): Promise<Category[] | null> {
   if (!isSupabaseConfigured()) return null;
-  const supabase = await createServerSupabase();
+  const supabase = await createReadSupabase();
   if (!supabase) return null;
 
   const { data, error } = await supabase

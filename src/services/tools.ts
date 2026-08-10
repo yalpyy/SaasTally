@@ -1,6 +1,6 @@
 import { tools as fixtureTools } from "@/data/tools";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
-import { createServerSupabase } from "@/lib/supabase/server";
+import { createReadSupabase } from "@/lib/supabase/server";
 import type { ToolRow } from "@/lib/supabase/database.types";
 import type { PricingModel, Tool, ToolFaq, ToolPricingTier } from "@/types";
 
@@ -45,7 +45,7 @@ function mapToolRow(row: ToolRow, categorySlugs: string[], sponsored: boolean): 
 
 async function liveTools(): Promise<Tool[] | null> {
   if (!isSupabaseConfigured()) return null;
-  const supabase = await createServerSupabase();
+  const supabase = await createReadSupabase();
   if (!supabase) return null;
 
   const { data, error } = await supabase

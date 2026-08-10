@@ -49,6 +49,43 @@ export async function createServerSupabase() {
 }
 
 /**
+ * Cookie-free anonymous client. Safe to use outside a request scope — during
+ * `generateStaticParams`, `generateSitemaps` and any other build-time work,
+ * where `cookies()` throws. Carries no session, so RLS treats it as anonymous
+ * and it must only be used to read publicly-visible rows.
+ */
+export function createPublicSupabase() {
+  if (!isSupabaseConfigured()) return null;
+
+  return createServerClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+    cookies: {
+      getAll() {
+        return [];
+      },
+      setAll() {
+        /* anonymous client is stateless */
+      },
+    },
+  });
+}
+
+/**
+ * Client for reading public catalogue data.
+ *
+ * Prefers the request-scoped client so a signed-in staff member still sees rows
+ * their session grants, but falls back to the anonymous client when there is no
+ * request — otherwise `cookies()` throws and the production build fails while
+ * collecting page data.
+ */
+export async function createReadSupabase() {
+  try {
+    return await createServerSupabase();
+  } catch {
+    return createPublicSupabase();
+  }
+}
+
+/**
  * Service-role client. SERVER ONLY, and only for operations that must bypass
  * RLS — currently just recording anonymous affiliate clicks.
  *

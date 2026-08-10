@@ -1,6 +1,6 @@
 import { articles as fixtureArticles } from "@/data/articles";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
-import { createServerSupabase } from "@/lib/supabase/server";
+import { createReadSupabase } from "@/lib/supabase/server";
 import type { ArticleRow } from "@/lib/supabase/database.types";
 import type { Article, ContentStatus } from "@/types";
 
@@ -26,7 +26,7 @@ function mapArticleRow(row: ArticleRow): Article {
 
 async function liveArticles(): Promise<Article[] | null> {
   if (!isSupabaseConfigured()) return null;
-  const supabase = await createServerSupabase();
+  const supabase = await createReadSupabase();
   if (!supabase) return null;
 
   const { data, error } = await supabase
