@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { requireStaff } from "@/lib/auth";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
-import { toolInputSchema } from "@/lib/validation/tool";
+import { toolInputSchema, type ToolInput } from "@/lib/validation/tool";
 
 export interface ToolFormState {
   status: "idle" | "error";
@@ -23,27 +23,12 @@ function text(formData: FormData, key: string): string {
 }
 
 function checkbox(formData: FormData, key: string): boolean {
-  return formData.get(key) === "on" || formData.get(key) === "true";
+  const value = formData.get(key);
+  return value === "on" || value === "true";
 }
 
-/**
- * Creates a tool.
- *
- * Three things worth noting:
- *
- * 1. `requireStaff()` runs first. A Server Action is a public HTTP endpoint —
- *    anyone can invoke it. Hiding the form is not authorisation.
- * 2. The write goes through the **session** client, so Postgres RLS re-checks
- *    the caller's role. Authorisation is enforced twice, on purpose.
- * 3. Nothing is faked in mock mode. Without Supabase we say so and stop.
- */
-export async function createToolAction(
-  _prevState: ToolFormState,
-  formData: FormData,
-): Promise<ToolFormState> {
-  await requireStaff();
-
-  const raw = {
+function readForm(formData: FormData) {
+  return {
     name: text(formData, "name"),
     slug: text(formData, "slug"),
     websiteUrl: text(formData, "websiteUrl"),
@@ -65,99 +50,151 @@ export async function createToolAction(
     active: checkbox(formData, "active"),
     categorySlugs: formData.getAll("categorySlugs").map(String),
   };
+}
 
+/** Maps validated input onto database column names. */
+function toRow(input: ToolInput) {
+  return {
+    name: input.name,
+    slug: input.slug,
+    website_url: input.websiteUrl,
+    short_description: input.shortDescription,
+    description: input.description,
+    best_for: input.bestFor,
+    company_name: input.companyName,
+    starting_price: input.startingPrice,
+    pricing_model: input.pricingModel,
+    rating: input.rating,
+    founded_year: input.foundedYear,
+    features: input.features,
+    pros: input.pros,
+    cons: input.cons,
+    verdict: input.verdict,
+    seo_title: input.seoTitle,
+    seo_description: input.seoDescription,
+    featured: input.featured,
+    active: input.active,
+  };
+}
+
+function refreshPublicPages(slug: string, categorySlugs: string[]) {
+  revalidatePath("/admin/tools");
+  revalidatePath("/software");
+  revalidatePath("/");
+  revalidatePath(`/tools/${slug}`);
+  for (const categorySlug of categorySlugs) {
+    revalidatePath(`/categories/${categorySlug}`);
+  }
+}
+
+/**
+ * Shared prologue for both actions.
+ *
+ * `requireStaff()` runs first because a Server Action is a public HTTP
+ * endpoint — anyone can invoke it, so hiding the form is not authorisation.
+ * The write then goes through the **session** client, meaning Postgres RLS
+ * re-checks the caller's role. Two independent gates, deliberately.
+ */
+async function prepare(formData: FormData) {
+  await requireStaff();
+
+  const raw = readForm(formData);
   const parsed = toolInputSchema.safeParse(raw);
 
   if (!parsed.success) {
     return {
-      status: "error",
-      message: "Some fields need attention.",
-      fieldErrors: parsed.error.flatten().fieldErrors as Record<string, string[]>,
-      values: raw,
+      failure: {
+        status: "error" as const,
+        message: "Some fields need attention.",
+        fieldErrors: parsed.error.flatten().fieldErrors as Record<string, string[]>,
+        values: raw,
+      },
     };
   }
 
   if (!isSupabaseConfigured()) {
     return {
-      status: "error",
-      message:
-        "Supabase is not configured, so nothing can be saved. Add the environment variables and try again.",
-      values: raw,
+      failure: {
+        status: "error" as const,
+        message:
+          "Supabase is not configured, so nothing can be saved. Add the environment variables and try again.",
+        values: raw,
+      },
     };
   }
 
   const supabase = await createServerSupabase();
   if (!supabase) {
-    return { status: "error", message: "Could not reach the database.", values: raw };
+    return {
+      failure: { status: "error" as const, message: "Could not reach the database.", values: raw },
+    };
   }
 
-  const input = parsed.data;
-
-  // Resolve category slugs to ids before writing anything, so we never create
-  // a tool that ends up with no categories attached.
   const { data: categoryRows, error: categoryError } = await supabase
     .from("categories")
     .select("id, slug")
-    .in("slug", input.categorySlugs);
+    .in("slug", parsed.data.categorySlugs);
 
   if (categoryError) {
-    return { status: "error", message: "Could not load categories.", values: raw };
+    return {
+      failure: { status: "error" as const, message: "Could not load categories.", values: raw },
+    };
   }
 
   const categories = (categoryRows ?? []) as { id: string; slug: string }[];
 
-  if (categories.length !== input.categorySlugs.length) {
+  if (categories.length !== parsed.data.categorySlugs.length) {
     return {
-      status: "error",
-      message: "One of the selected categories no longer exists. Reload and try again.",
-      values: raw,
+      failure: {
+        status: "error" as const,
+        message: "One of the selected categories no longer exists. Reload and try again.",
+        values: raw,
+      },
     };
   }
 
-  const { data: inserted, error: insertError } = await supabase
+  return { supabase, input: parsed.data, categories, raw };
+}
+
+function duplicateSlugFailure(slug: string, raw: ToolFormState["values"]): ToolFormState {
+  return {
+    status: "error",
+    message: `The slug "${slug}" is already taken. Choose a different one.`,
+    fieldErrors: { slug: ["This slug is already in use"] },
+    values: raw,
+  };
+}
+
+export async function createToolAction(
+  _prevState: ToolFormState,
+  formData: FormData,
+): Promise<ToolFormState> {
+  const prepared = await prepare(formData);
+  if ("failure" in prepared) return prepared.failure;
+
+  const { supabase, input, categories, raw } = prepared;
+
+  const { data: inserted, error } = await supabase
     .from("tools")
-    .insert({
-      name: input.name,
-      slug: input.slug,
-      website_url: input.websiteUrl,
-      short_description: input.shortDescription,
-      description: input.description,
-      best_for: input.bestFor,
-      company_name: input.companyName,
-      starting_price: input.startingPrice,
-      pricing_model: input.pricingModel,
-      rating: input.rating,
-      founded_year: input.foundedYear,
-      features: input.features,
-      pros: input.pros,
-      cons: input.cons,
-      verdict: input.verdict,
-      seo_title: input.seoTitle,
-      seo_description: input.seoDescription,
-      featured: input.featured,
-      active: input.active,
-    })
+    .insert(toRow(input))
     .select("id")
     .single();
 
-  if (insertError || !inserted) {
+  if (error || !inserted) {
     // 23505 is Postgres' unique_violation — almost always a duplicate slug.
-    const isDuplicate = insertError?.code === "23505";
+    if (error?.code === "23505") return duplicateSlugFailure(input.slug, raw);
     return {
       status: "error",
-      message: isDuplicate
-        ? `The slug "${input.slug}" is already taken. Choose a different one.`
-        : "Could not save the tool. Check your permissions and try again.",
-      fieldErrors: isDuplicate ? { slug: ["This slug is already in use"] } : undefined,
+      message: "Could not save the tool. Check your permissions and try again.",
       values: raw,
     };
   }
 
   const toolId = (inserted as { id: string }).id;
 
-  const { error: linkError } = await supabase.from("tool_categories").insert(
-    categories.map((category) => ({ tool_id: toolId, category_id: category.id })),
-  );
+  const { error: linkError } = await supabase
+    .from("tool_categories")
+    .insert(categories.map((category) => ({ tool_id: toolId, category_id: category.id })));
 
   if (linkError) {
     return {
@@ -168,13 +205,54 @@ export async function createToolAction(
     };
   }
 
-  revalidatePath("/admin/tools");
-  revalidatePath("/software");
-  revalidatePath(`/tools/${input.slug}`);
-  for (const slug of input.categorySlugs) {
-    revalidatePath(`/categories/${slug}`);
-  }
+  refreshPublicPages(input.slug, input.categorySlugs);
 
   // redirect() throws internally, so it must stay outside any try/catch.
+  redirect("/admin/tools");
+}
+
+export async function updateToolAction(
+  _prevState: ToolFormState,
+  formData: FormData,
+): Promise<ToolFormState> {
+  const id = text(formData, "id");
+  if (!id) {
+    return { status: "error", message: "Missing tool id. Reload the page and try again." };
+  }
+
+  const prepared = await prepare(formData);
+  if ("failure" in prepared) return prepared.failure;
+
+  const { supabase, input, categories, raw } = prepared;
+
+  // Capture the previous slug so its old public URL is revalidated too.
+  const { data: existing } = await supabase.from("tools").select("slug").eq("id", id).maybeSingle();
+  const previousSlug = (existing as { slug: string } | null)?.slug;
+
+  const { error } = await supabase.from("tools").update(toRow(input)).eq("id", id);
+
+  if (error) {
+    if (error.code === "23505") return duplicateSlugFailure(input.slug, raw);
+    return {
+      status: "error",
+      message: "Could not update the tool. Check your permissions and try again.",
+      values: raw,
+    };
+  }
+
+  // Replace the category links wholesale — simpler and safer than diffing.
+  const { error: clearError } = await supabase.from("tool_categories").delete().eq("tool_id", id);
+
+  if (!clearError) {
+    await supabase
+      .from("tool_categories")
+      .insert(categories.map((category) => ({ tool_id: id, category_id: category.id })));
+  }
+
+  refreshPublicPages(input.slug, input.categorySlugs);
+  if (previousSlug && previousSlug !== input.slug) {
+    revalidatePath(`/tools/${previousSlug}`);
+  }
+
   redirect("/admin/tools");
 }

@@ -5,12 +5,40 @@ import Link from "next/link";
 import { AlertTriangle, Loader2 } from "lucide-react";
 import {
   createToolAction,
+  updateToolAction,
   initialToolFormState,
   type ToolFormState,
 } from "@/app/(admin)/admin/tools/actions";
 import { pricingModels, suggestSlug } from "@/lib/validation/tool";
 import type { Category } from "@/types";
-import { cn } from "@/lib/utils/cn";
+
+/**
+ * Form-ready values. Declared here rather than imported from the service so
+ * this client component never reaches into a `server-only` module.
+ */
+export interface ToolFormValues {
+  id: string;
+  name: string;
+  slug: string;
+  websiteUrl: string;
+  shortDescription: string;
+  description: string;
+  bestFor: string;
+  companyName: string;
+  startingPrice: string;
+  verdict: string;
+  seoTitle: string;
+  seoDescription: string;
+  pricingModel: string;
+  rating: string;
+  foundedYear: string;
+  features: string;
+  pros: string;
+  cons: string;
+  featured: boolean;
+  active: boolean;
+  categorySlugs: string[];
+}
 
 const pricingLabels: Record<(typeof pricingModels)[number], string> = {
   free: "Free",
@@ -21,26 +49,56 @@ const pricingLabels: Record<(typeof pricingModels)[number], string> = {
   custom: "Custom pricing",
 };
 
-export function ToolForm({ categories }: { categories: Category[] }) {
+const inputClass =
+  "w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm outline-none transition-colors placeholder:text-subtle focus:border-border-strong";
+
+export function ToolForm({
+  categories,
+  tool,
+}: {
+  categories: Category[];
+  /** Present in edit mode, absent when creating. */
+  tool?: ToolFormValues;
+}) {
+  const isEdit = Boolean(tool);
+
   const [state, formAction, isPending] = useActionState<ToolFormState, FormData>(
-    createToolAction,
+    isEdit ? updateToolAction : createToolAction,
     initialToolFormState,
   );
 
-  const [name, setName] = useState("");
-  const [slug, setSlug] = useState("");
-  const [slugEdited, setSlugEdited] = useState(false);
-
-  // Slug follows the name until the editor types their own.
-  const onNameChange = (value: string) => {
-    setName(value);
-    if (!slugEdited) setSlug(suggestSlug(value));
-  };
+  // Name and slug are controlled so the slug can follow the name. React keeps
+  // this state across failed submits, so nothing is lost on a validation error.
+  const [name, setName] = useState(tool?.name ?? "");
+  const [slug, setSlug] = useState(tool?.slug ?? "");
+  // Never auto-rewrite the slug of a published tool — that would break its URL.
+  const [slugLocked, setSlugLocked] = useState(isEdit);
 
   const errors = state.fieldErrors ?? {};
+  const submitted = state.values;
+
+  /** Prefer what the editor just typed, then the saved value, then blank. */
+  function initial(field: keyof ToolFormValues): string {
+    const attempted = submitted?.[field];
+    if (typeof attempted === "string") return attempted;
+    const saved = tool?.[field];
+    return typeof saved === "string" ? saved : "";
+  }
+
+  function initialBool(field: "featured" | "active", fallback: boolean): boolean {
+    if (submitted) return Boolean(submitted[field]);
+    if (tool) return tool[field];
+    return fallback;
+  }
+
+  const selectedCategories: string[] = Array.isArray(submitted?.categorySlugs)
+    ? (submitted.categorySlugs as string[])
+    : (tool?.categorySlugs ?? []);
 
   return (
     <form action={formAction} className="space-y-8">
+      {isEdit ? <input type="hidden" name="id" value={tool!.id} /> : null}
+
       {state.status === "error" && state.message ? (
         <div
           role="alert"
@@ -57,7 +115,10 @@ export function ToolForm({ categories }: { categories: Category[] }) {
             id="name"
             name="name"
             value={name}
-            onChange={(event) => onNameChange(event.target.value)}
+            onChange={(event) => {
+              setName(event.target.value);
+              if (!slugLocked) setSlug(suggestSlug(event.target.value));
+            }}
             required
             className={inputClass}
             placeholder="Semrush"
@@ -69,14 +130,18 @@ export function ToolForm({ categories }: { categories: Category[] }) {
           name="slug"
           error={errors.slug}
           required
-          hint="Becomes the URL: /tools/your-slug"
+          hint={
+            isEdit
+              ? "Changing this changes the public URL and breaks existing links."
+              : "Becomes the URL: /tools/your-slug"
+          }
         >
           <input
             id="slug"
             name="slug"
             value={slug}
             onChange={(event) => {
-              setSlugEdited(true);
+              setSlugLocked(true);
               setSlug(event.target.value);
             }}
             required
@@ -91,7 +156,7 @@ export function ToolForm({ categories }: { categories: Category[] }) {
             name="websiteUrl"
             type="url"
             required
-            defaultValue={asString(state.values?.websiteUrl)}
+            defaultValue={initial("websiteUrl")}
             className={inputClass}
             placeholder="https://www.example.com"
           />
@@ -109,7 +174,7 @@ export function ToolForm({ categories }: { categories: Category[] }) {
             name="shortDescription"
             required
             maxLength={160}
-            defaultValue={asString(state.values?.shortDescription)}
+            defaultValue={initial("shortDescription")}
             className={inputClass}
             placeholder="SEO & competitive research"
           />
@@ -125,13 +190,16 @@ export function ToolForm({ categories }: { categories: Category[] }) {
             id="description"
             name="description"
             rows={6}
-            defaultValue={asString(state.values?.description)}
+            defaultValue={initial("description")}
             className={inputClass}
           />
         </Field>
       </Fieldset>
 
-      <Fieldset title="Categories" description="Drives navigation, filtering and the homepage grid.">
+      <Fieldset
+        title="Categories"
+        description="Drives navigation, filtering and the homepage grid."
+      >
         {errors.categorySlugs ? <FieldError messages={errors.categorySlugs} /> : null}
         <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
           {categories.map((category) => (
@@ -143,7 +211,7 @@ export function ToolForm({ categories }: { categories: Category[] }) {
                 type="checkbox"
                 name="categorySlugs"
                 value={category.slug}
-                defaultChecked={asArray(state.values?.categorySlugs).includes(category.slug)}
+                defaultChecked={selectedCategories.includes(category.slug)}
                 className="size-4 accent-[var(--primary)]"
               />
               {category.name}
@@ -158,7 +226,7 @@ export function ToolForm({ categories }: { categories: Category[] }) {
             id="bestFor"
             name="bestFor"
             maxLength={80}
-            defaultValue={asString(state.values?.bestFor)}
+            defaultValue={initial("bestFor")}
             className={inputClass}
           />
         </Field>
@@ -172,7 +240,7 @@ export function ToolForm({ categories }: { categories: Category[] }) {
           <input
             id="startingPrice"
             name="startingPrice"
-            defaultValue={asString(state.values?.startingPrice)}
+            defaultValue={initial("startingPrice")}
             className={inputClass}
           />
         </Field>
@@ -181,7 +249,7 @@ export function ToolForm({ categories }: { categories: Category[] }) {
           <select
             id="pricingModel"
             name="pricingModel"
-            defaultValue={asString(state.values?.pricingModel) || "subscription"}
+            defaultValue={initial("pricingModel") || "subscription"}
             className={inputClass}
           >
             {pricingModels.map((model) => (
@@ -205,7 +273,7 @@ export function ToolForm({ categories }: { categories: Category[] }) {
             step="0.1"
             min="0"
             max="5"
-            defaultValue={asString(state.values?.rating)}
+            defaultValue={initial("rating")}
             className={inputClass}
           />
         </Field>
@@ -214,7 +282,7 @@ export function ToolForm({ categories }: { categories: Category[] }) {
           <input
             id="companyName"
             name="companyName"
-            defaultValue={asString(state.values?.companyName)}
+            defaultValue={initial("companyName")}
             className={inputClass}
           />
         </Field>
@@ -226,7 +294,7 @@ export function ToolForm({ categories }: { categories: Category[] }) {
             type="number"
             min="1970"
             max="2100"
-            defaultValue={asString(state.values?.foundedYear)}
+            defaultValue={initial("foundedYear")}
             className={inputClass}
           />
         </Field>
@@ -238,7 +306,7 @@ export function ToolForm({ categories }: { categories: Category[] }) {
             id="features"
             name="features"
             rows={6}
-            defaultValue={asString(state.values?.features)}
+            defaultValue={initial("features")}
             className={inputClass}
             placeholder={"Keyword research\nRank tracking\nSite audits"}
           />
@@ -249,17 +317,22 @@ export function ToolForm({ categories }: { categories: Category[] }) {
             id="pros"
             name="pros"
             rows={4}
-            defaultValue={asString(state.values?.pros)}
+            defaultValue={initial("pros")}
             className={inputClass}
           />
         </Field>
 
-        <Field label="Cons" name="cons" error={errors.cons} hint="Say who it is not for. This is what makes the page trustworthy.">
+        <Field
+          label="Cons"
+          name="cons"
+          error={errors.cons}
+          hint="Say who it is not for. This is what makes the page trustworthy."
+        >
           <textarea
             id="cons"
             name="cons"
             rows={4}
-            defaultValue={asString(state.values?.cons)}
+            defaultValue={initial("cons")}
             className={inputClass}
           />
         </Field>
@@ -269,7 +342,7 @@ export function ToolForm({ categories }: { categories: Category[] }) {
             id="verdict"
             name="verdict"
             rows={3}
-            defaultValue={asString(state.values?.verdict)}
+            defaultValue={initial("verdict")}
             className={inputClass}
           />
         </Field>
@@ -281,7 +354,7 @@ export function ToolForm({ categories }: { categories: Category[] }) {
             id="seoTitle"
             name="seoTitle"
             maxLength={70}
-            defaultValue={asString(state.values?.seoTitle)}
+            defaultValue={initial("seoTitle")}
             className={inputClass}
           />
         </Field>
@@ -292,7 +365,7 @@ export function ToolForm({ categories }: { categories: Category[] }) {
             name="seoDescription"
             rows={2}
             maxLength={160}
-            defaultValue={asString(state.values?.seoDescription)}
+            defaultValue={initial("seoDescription")}
             className={inputClass}
           />
         </Field>
@@ -303,7 +376,7 @@ export function ToolForm({ categories }: { categories: Category[] }) {
           <input
             type="checkbox"
             name="active"
-            defaultChecked={state.values ? Boolean(state.values.active) : true}
+            defaultChecked={initialBool("active", true)}
             className="size-4 accent-[var(--primary)]"
           />
           <span>
@@ -316,7 +389,7 @@ export function ToolForm({ categories }: { categories: Category[] }) {
           <input
             type="checkbox"
             name="featured"
-            defaultChecked={Boolean(state.values?.featured)}
+            defaultChecked={initialBool("featured", false)}
             className="size-4 accent-[var(--primary)]"
           />
           <span>
@@ -333,7 +406,7 @@ export function ToolForm({ categories }: { categories: Category[] }) {
           className="inline-flex h-11 items-center gap-2 rounded-xl bg-primary px-5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary-hover disabled:opacity-60"
         >
           {isPending ? <Loader2 className="size-4 animate-spin" aria-hidden="true" /> : null}
-          Save tool
+          {isEdit ? "Save changes" : "Save tool"}
         </button>
         <Link
           href="/admin/tools"
@@ -347,11 +420,8 @@ export function ToolForm({ categories }: { categories: Category[] }) {
 }
 
 /* ------------------------------------------------------------------------- */
-/* Local building blocks — kept in this file because nothing else uses them.  */
+/* Local building blocks — nothing else uses them, so they stay in this file. */
 /* ------------------------------------------------------------------------- */
-
-const inputClass =
-  "w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm outline-none transition-colors placeholder:text-subtle focus:border-border-strong";
 
 function Fieldset({
   title,
@@ -405,17 +475,8 @@ function Field({
 
 function FieldError({ messages }: { messages: string[] }) {
   return (
-    <p className={cn("mt-2 text-xs text-danger")} role="alert">
+    <p className="mt-2 text-xs text-danger" role="alert">
       {messages.join(". ")}
     </p>
   );
-}
-
-function asString(value: string | string[] | boolean | undefined): string {
-  if (typeof value === "string") return value;
-  return "";
-}
-
-function asArray(value: string | string[] | boolean | undefined): string[] {
-  return Array.isArray(value) ? value : [];
 }
