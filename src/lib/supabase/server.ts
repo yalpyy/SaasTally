@@ -17,12 +17,9 @@ import {
 type CookieToSet = { name: string; value: string; options: CookieOptions };
 
 /**
- * Request-scoped Supabase client for Server Components, Route Handlers and
- * Server Actions. Reads the auth session from cookies so RLS applies to the
- * signed-in staff member.
- *
- * Returns `null` in mock mode so callers can fall back to fixtures instead of
- * throwing during local development.
+ * Session-scoped client. Reads the auth cookie, so RLS applies to the
+ * signed-in staff member. Only `src/lib/auth.ts` needs this — touching cookies
+ * opts a route out of static rendering, so never use it for public pages.
  */
 export async function createServerSupabase() {
   if (!isSupabaseConfigured()) return null;
@@ -41,7 +38,7 @@ export async function createServerSupabase() {
           }
         } catch {
           // Called from a Server Component render — safe to ignore, the
-          // middleware/route handler refreshes the session instead.
+          // middleware refreshes the session instead.
         }
       },
     },
@@ -49,10 +46,9 @@ export async function createServerSupabase() {
 }
 
 /**
- * Cookie-free anonymous client. Safe to use outside a request scope — during
- * `generateStaticParams`, `generateSitemaps` and any other build-time work,
- * where `cookies()` throws. Carries no session, so RLS treats it as anonymous
- * and it must only be used to read publicly-visible rows.
+ * Cookie-free anonymous client. Works during the build and at request time,
+ * and carries no session, so RLS treats it as an anonymous visitor: only
+ * `active` tools and `published` content are visible.
  */
 export function createPublicSupabase() {
   if (!isSupabaseConfigured()) return null;
@@ -70,26 +66,22 @@ export function createPublicSupabase() {
 }
 
 /**
- * Client for reading public catalogue data.
+ * Client for public catalogue reads.
  *
- * Prefers the request-scoped client so a signed-in staff member still sees rows
- * their session grants, but falls back to the anonymous client when there is no
- * request — otherwise `cookies()` throws and the production build fails while
- * collecting page data.
+ * Always anonymous — deliberately. The public catalogue is identical for every
+ * visitor, so reading it through the session client bought nothing and cost
+ * static rendering: any access to `cookies()` forces the page dynamic and
+ * Next.js logs "Page changed from static to dynamic at runtime".
+ *
+ * Stays `async` so existing `await createReadSupabase()` call sites are unchanged.
  */
 export async function createReadSupabase() {
-  try {
-    return await createServerSupabase();
-  } catch {
-    return createPublicSupabase();
-  }
+  return createPublicSupabase();
 }
 
 /**
  * Service-role client. SERVER ONLY, and only for operations that must bypass
  * RLS — currently just recording anonymous affiliate clicks.
- *
- * Never expose this client, its key, or any data it returns without filtering.
  */
 export function createServiceSupabase() {
   const secret = getServiceRoleKey();
