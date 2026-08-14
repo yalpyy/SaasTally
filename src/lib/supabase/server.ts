@@ -1,7 +1,6 @@
 import "server-only";
 
 import { cookies } from "next/headers";
-import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import {
   SUPABASE_PUBLISHABLE_KEY,
@@ -64,32 +63,6 @@ export function createPublicSupabase() {
       },
     },
   });
-}
-
-/**
- * Cookie-free anon client for build-time and public reads.
- * RLS already limits anonymous reads to active/published rows, so this is
- * safe for every public page — it simply has no session attached.
- */
-export function createAnonSupabase() {
-  if (!isSupabaseConfigured()) return null;
-  return createSupabaseClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
-    auth: { persistSession: false, autoRefreshToken: false },
-  });
-}
-
-/**
- * Read client used by the service layer. Prefers the cookie-scoped client so
- * signed-in staff see drafts, but falls back to anon when there is no request
- * context (static generation, sitemap).
- */
-export async function createReadSupabase() {
-  if (!isSupabaseConfigured()) return null;
-  try {
-    return await createServerSupabase();
-  } catch {
-    return createAnonSupabase();
-  }
 }
 
 /**
