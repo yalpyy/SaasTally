@@ -8,18 +8,32 @@ import { requireStaff } from "@/lib/auth";
 import { getTools } from "@/services/tools";
 import { getArticles } from "@/services/articles";
 import { getComparisons } from "@/services/comparisons";
+import { getClickStats } from "@/services/affiliate-stats";
 import { dataMode } from "@/lib/supabase/config";
 
 export default async function AdminDashboardPage() {
   const profile = await requireStaff();
-  const [tools, articles, comparisons] = await Promise.all([
+  const [tools, articles, comparisons, clickStats] = await Promise.all([
     getTools(),
     getArticles(),
     getComparisons(),
+    getClickStats(30),
   ]);
 
   const mode = dataMode();
   const sponsored = tools.filter((tool) => tool.sponsored);
+
+  // Three distinct states, deliberately not collapsed into one: mock mode
+  // records nothing, live mode without a secret key cannot read the table, and
+  // live mode with credentials returns a real number — including a real zero.
+  const clickValue = mode !== "live" ? "n/a" : clickStats ? clickStats.total : "—";
+
+  const clickHint =
+    mode !== "live"
+      ? "Requires a live database"
+      : clickStats
+        ? `Last ${clickStats.windowDays} days`
+        : "Set SUPABASE_SECRET_KEY to read click data";
 
   return (
     <>
@@ -38,13 +52,9 @@ export default async function AdminDashboardPage() {
           />
           <StatCard
             label="Affiliate clicks"
-            value={mode === "live" ? "—" : "n/a"}
+            value={clickValue}
             Icon={MousePointerClick}
-            hint={
-              mode === "live"
-                ? "Connect analytics reads to populate"
-                : "Requires a live database"
-            }
+            hint={clickHint}
           />
           <StatCard
             label="Comparisons"
@@ -62,22 +72,48 @@ export default async function AdminDashboardPage() {
                 Affiliate programs
               </Link>
             </div>
-            <p className="mt-4 text-sm leading-relaxed text-muted">
-              {mode === "live"
-                ? "Click aggregation reads from the affiliate_clicks table. No rows have been recorded yet."
-                : "Click data is only available with a live database. Nothing is being recorded in mock mode."}
-            </p>
-            <ul className="mt-5 space-y-2">
-              {sponsored.map((tool) => (
-                <li
-                  key={tool.id}
-                  className="flex items-center justify-between rounded-lg border border-border px-4 py-2.5 text-sm"
-                >
-                  <span>{tool.name}</span>
-                  <span className="text-xs text-subtle">Program active</span>
-                </li>
-              ))}
-            </ul>
+
+            {clickStats && clickStats.topTools.length > 0 ? (
+              <>
+                <p className="mt-4 text-xs text-subtle">
+                  Outbound CTA clicks over the last {clickStats.windowDays} days.
+                </p>
+                <ul className="mt-4 space-y-2">
+                  {clickStats.topTools.map((tool) => (
+                    <li
+                      key={tool.slug}
+                      className="flex items-center justify-between gap-4 rounded-lg border border-border px-4 py-2.5 text-sm"
+                    >
+                      <span className="truncate">{tool.name}</span>
+                      <span className="shrink-0 tabular-nums text-xs text-subtle">
+                        {tool.clicks}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </>
+            ) : (
+              <>
+                <p className="mt-4 text-sm leading-relaxed text-muted">
+                  {mode !== "live"
+                    ? "Click data is only available with a live database. Nothing is being recorded in mock mode."
+                    : clickStats
+                      ? "No clicks recorded in the last 30 days. Tools with an active affiliate program appear here once visitors use a CTA."
+                      : "Click aggregation needs SUPABASE_SECRET_KEY. Clicks are still being recorded — they just cannot be read here yet."}
+                </p>
+                <ul className="mt-5 space-y-2">
+                  {sponsored.map((tool) => (
+                    <li
+                      key={tool.id}
+                      className="flex items-center justify-between rounded-lg border border-border px-4 py-2.5 text-sm"
+                    >
+                      <span>{tool.name}</span>
+                      <span className="text-xs text-subtle">Program active</span>
+                    </li>
+                  ))}
+                </ul>
+              </>
+            )}
           </Card>
 
           <Card className="p-6">
