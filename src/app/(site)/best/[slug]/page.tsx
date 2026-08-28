@@ -45,7 +45,8 @@ export default async function BestListPage({ params }: { params: Promise<{ slug:
   const list = await getBestListBySlug(slug);
   if (!list) notFound();
 
-  const tools = await getToolsBySlugs(list.toolSlugs);
+  const tools = await getToolsBySlugs(list.items.map((item) => item.toolSlug));
+  const blurbs = new Map(list.items.map((item) => [item.toolSlug, item.blurb]));
 
   const breadcrumbs = [
     { label: "Home", href: "/" },
@@ -73,7 +74,14 @@ export default async function BestListPage({ params }: { params: Promise<{ slug:
                 >
                   {index + 1}
                 </span>
-                <ToolCard tool={tool} sourceType="best" position="best-list" />
+                <div className="min-w-0">
+                  <ToolCard tool={tool} sourceType="best" position="best-list" />
+                  {blurbs.get(tool.slug) ? (
+                    <p className="mt-3 text-sm leading-relaxed text-muted">
+                      {blurbs.get(tool.slug)}
+                    </p>
+                  ) : null}
+                </div>
               </li>
             ))}
           </ol>

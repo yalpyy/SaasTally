@@ -9,7 +9,7 @@ export const reviews: Review[] = [
     slug: "semrush",
     quickVerdict:
       "A broad marketing research platform that earns its price for teams working across organic, paid and content at the same time.",
-    score: 4.7,
+    score: 9.4,
     breakdown: [
       { label: "Features", score: 9.4 },
       { label: "Ease of Use", score: 8.8 },
@@ -37,6 +37,7 @@ export const reviews: Review[] = [
     finalVerdict:
       "If your work spans organic and paid research, Semrush consolidates several tools into one subscription and is worth evaluating seriously.",
     authorName: "SaaSTally Editorial",
+    authorSlug: null,
     status: "published",
     publishedAt: "2026-07-14",
     updatedAt: "2026-07-14",
@@ -48,7 +49,7 @@ export const reviews: Review[] = [
     slug: "ahrefs",
     quickVerdict:
       "The sharper instrument for link intelligence and competitor teardown, with less depth on the paid search side.",
-    score: 4.6,
+    score: 9.2,
     breakdown: [
       { label: "Features", score: 9.1 },
       { label: "Ease of Use", score: 9.2 },
@@ -76,6 +77,7 @@ export const reviews: Review[] = [
     finalVerdict:
       "Choose Ahrefs when links and competitor analysis drive your decisions; look elsewhere if paid media research is central.",
     authorName: "SaaSTally Editorial",
+    authorSlug: null,
     status: "published",
     publishedAt: "2026-07-02",
     updatedAt: "2026-07-02",

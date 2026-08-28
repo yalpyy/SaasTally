@@ -88,6 +88,10 @@ export interface Review {
   title: string;
   slug: string;
   quickVerdict: string;
+  /**
+   * Out of 10, the same scale as `breakdown`. Distinct from `Tool.rating`,
+   * which is the 5-point star figure shown on cards.
+   */
   score: number;
   breakdown: RatingCriterion[];
   likes: string[];
@@ -98,6 +102,7 @@ export interface Review {
   audienceBody: string;
   finalVerdict: string;
   authorName: string;
+  authorSlug: string | null;
   status: ContentStatus;
   publishedAt: string;
   updatedAt: string;
@@ -145,12 +150,20 @@ export interface Article {
   updatedAt: string;
 }
 
+export interface BestListItem {
+  toolSlug: string;
+  /** Why this tool earns this spot. Editorial, and often the whole point. */
+  blurb: string | null;
+}
+
 export interface BestList {
   slug: string;
   title: string;
   description: string;
   categorySlug: string;
-  toolSlugs: string[];
+  /** Editorially ordered. Position is a judgement, never a commission figure. */
+  items: BestListItem[];
+  status: ContentStatus;
   updatedAt: string;
 }
 
