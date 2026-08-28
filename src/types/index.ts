@@ -52,7 +52,10 @@ export interface Tool {
   websiteUrl: string;
   shortDescription: string;
   description: string;
-  /** Editorial score out of 5. Never derived from affiliate commission. */
+  /**
+   * Catalogue score out of 10, the same scale as a review's. Never derived
+   * from affiliate commission.
+   */
   rating: number | null;
   startingPrice: string | null;
   pricingModel: PricingModel;
@@ -88,6 +91,11 @@ export interface Review {
   title: string;
   slug: string;
   quickVerdict: string;
+  /**
+   * Out of 10, like `breakdown` and `Tool.rating`. Still a separate figure
+   * from the tool's: this is the score the review argues for, while the tool
+   * rating is the catalogue's summary and exists for unreviewed tools too.
+   */
   score: number;
   breakdown: RatingCriterion[];
   likes: string[];
@@ -98,6 +106,7 @@ export interface Review {
   audienceBody: string;
   finalVerdict: string;
   authorName: string;
+  authorSlug: string | null;
   status: ContentStatus;
   publishedAt: string;
   updatedAt: string;
@@ -136,6 +145,7 @@ export interface Article {
   featuredImage: string | null;
   status: ContentStatus;
   authorName: string;
+  authorSlug: string | null;
   categorySlug: string | null;
   readingMinutes: number;
   seoTitle: string | null;
@@ -145,12 +155,22 @@ export interface Article {
   updatedAt: string;
 }
 
+export interface BestListItem {
+  toolSlug: string;
+  /** Why this tool earns this spot. Editorial, and often the whole point. */
+  blurb: string | null;
+}
+
 export interface BestList {
   slug: string;
   title: string;
   description: string;
+  /** States the criteria before the conclusions. Optional. */
+  intro: string;
   categorySlug: string;
-  toolSlugs: string[];
+  /** Editorially ordered. Position is a judgement, never a commission figure. */
+  items: BestListItem[];
+  status: ContentStatus;
   updatedAt: string;
 }
 

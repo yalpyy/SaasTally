@@ -10,9 +10,12 @@ import {
   LayoutDashboard,
   LayoutGrid,
   Link2,
+  ListOrdered,
   Package,
+  RadioTower,
   Settings,
   Star,
+  Users,
 } from "lucide-react";
 import { LogoMark } from "@/components/ui/logo";
 import { cn } from "@/lib/utils/cn";
@@ -31,6 +34,9 @@ const items = [
     exact: false,
     adminOnly: false,
   },
+  { href: "/admin/best", label: "Best lists", Icon: ListOrdered, exact: false, adminOnly: false },
+  { href: "/admin/authors", label: "Authors", Icon: Users, exact: false, adminOnly: false },
+  { href: "/admin/sources", label: "Sources", Icon: RadioTower, exact: false, adminOnly: false },
   { href: "/admin/affiliate", label: "Affiliate", Icon: Link2, exact: false, adminOnly: true },
   { href: "/admin/media", label: "Media", Icon: ImageIcon, exact: false, adminOnly: false },
   { href: "/admin/settings", label: "Settings", Icon: Settings, exact: false, adminOnly: true },

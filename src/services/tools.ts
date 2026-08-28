@@ -48,23 +48,33 @@ async function liveTools(): Promise<Tool[] | null> {
   const supabase = await createReadSupabase();
   if (!supabase) return null;
 
-  const { data, error } = await supabase
-    .from("tools")
-    .select("*, tool_categories(categories(slug)), affiliate_programs(status)")
-    .eq("active", true)
-    .order("featured", { ascending: false })
-    .order("name", { ascending: true });
+  // The sponsored flag comes from `active_affiliate_tools`, not from a join on
+  // `affiliate_programs` — anonymous clients cannot read that table any more
+  // (migration 0002), and an embedded join would silently yield nothing,
+  // quietly dropping the sponsored label off every card.
+  const [{ data, error }, { data: sponsoredRows }] = await Promise.all([
+    supabase
+      .from("tools")
+      .select("*, tool_categories(categories(slug))")
+      .eq("active", true)
+      .order("featured", { ascending: false })
+      .order("name", { ascending: true }),
+    supabase.from("active_affiliate_tools").select("tool_id"),
+  ]);
 
   if (error || !data) return null;
 
+  const sponsoredIds = new Set(
+    ((sponsoredRows ?? []) as { tool_id: string }[]).map((row) => row.tool_id),
+  );
+
   return (data as unknown as (ToolRow & {
     tool_categories: { categories: { slug: string } | null }[] | null;
-    affiliate_programs: { status: string }[] | null;
   })[]).map((row) =>
     mapToolRow(
       row,
       (row.tool_categories ?? []).map((tc) => tc.categories?.slug).filter((s): s is string => !!s),
-      (row.affiliate_programs ?? []).some((p) => p.status === "active"),
+      sponsoredIds.has(row.id),
     ),
   );
 }

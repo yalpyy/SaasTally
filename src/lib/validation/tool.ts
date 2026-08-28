@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { scoreField } from "./common";
 
 /**
  * Input validation for the tool editor.
@@ -79,15 +80,11 @@ export const toolInputSchema = z.object({
 
   pricingModel: z.enum(pricingModels),
 
-  /** Editorial score out of 5. Blank is valid — we never invent a rating. */
-  rating: z
-    .string()
-    .default("")
-    .transform((value) => (value.trim() === "" ? null : Number(value)))
-    .refine(
-      (value) => value === null || (Number.isFinite(value) && value >= 0 && value <= 5),
-      "Rating must be a number between 0 and 5, or left blank",
-    ),
+  /**
+   * Editorial score out of 10, the same scale as a review's. Blank is valid —
+   * we never invent a rating.
+   */
+  rating: scoreField,
 
   foundedYear: z
     .string()

@@ -86,7 +86,12 @@ export function reviewSchema(review: Review, tool: Tool): Record<string, unknown
     name: review.title,
     reviewBody: review.quickVerdict,
     datePublished: review.publishedAt,
-    author: { "@type": "Organization", name: siteConfig.name },
+    // A named author is credited as a person; the house byline stays an
+    // organisation. Claiming a Person we cannot point at would be exactly the
+    // padding this file exists to avoid.
+    author: review.authorSlug
+      ? { "@type": "Person", name: review.authorName }
+      : { "@type": "Organization", name: siteConfig.name },
     publisher: { "@type": "Organization", name: siteConfig.name },
     itemReviewed: {
       "@type": "SoftwareApplication",
@@ -98,8 +103,11 @@ export function reviewSchema(review: Review, tool: Tool): Record<string, unknown
     reviewRating: {
       "@type": "Rating",
       ratingValue: review.score,
-      bestRating: 5,
-      worstRating: 1,
+      // Must track `Review.score`, which is out of 10 since migration 0003.
+      // Leaving this at 5 would publish a 9.4 as if it were nearly double the
+      // maximum — a structured-data claim we would deserve to be penalised for.
+      bestRating: 10,
+      worstRating: 0,
     },
   };
 }
@@ -113,7 +121,12 @@ export function articleSchema(article: Article): Record<string, unknown> {
     datePublished: article.publishedAt,
     dateModified: article.updatedAt,
     mainEntityOfPage: absoluteUrl(`/articles/${article.slug}`),
-    author: { "@type": "Organization", name: siteConfig.name },
+    // Same rule as reviews: a named author is a Person, the house byline is
+    // the organisation. Now that both content types share the authors table,
+    // they can finally share the rule too.
+    author: article.authorSlug
+      ? { "@type": "Person", name: article.authorName }
+      : { "@type": "Organization", name: siteConfig.name },
     publisher: { "@type": "Organization", name: siteConfig.name },
   };
 }

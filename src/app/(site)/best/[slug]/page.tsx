@@ -45,7 +45,8 @@ export default async function BestListPage({ params }: { params: Promise<{ slug:
   const list = await getBestListBySlug(slug);
   if (!list) notFound();
 
-  const tools = await getToolsBySlugs(list.toolSlugs);
+  const tools = await getToolsBySlugs(list.items.map((item) => item.toolSlug));
+  const blurbs = new Map(list.items.map((item) => [item.toolSlug, item.blurb]));
 
   const breadcrumbs = [
     { label: "Home", href: "/" },
@@ -63,6 +64,10 @@ export default async function BestListPage({ params }: { params: Promise<{ slug:
       />
 
       <Container className="py-12 sm:py-16">
+        {list.intro ? (
+          <p className="mb-10 max-w-3xl text-[15px] leading-relaxed text-muted">{list.intro}</p>
+        ) : null}
+
         {tools.length > 0 ? (
           <ol className="space-y-4">
             {tools.map((tool, index) => (
@@ -73,7 +78,14 @@ export default async function BestListPage({ params }: { params: Promise<{ slug:
                 >
                   {index + 1}
                 </span>
-                <ToolCard tool={tool} sourceType="best" position="best-list" />
+                <div className="min-w-0">
+                  <ToolCard tool={tool} sourceType="best" position="best-list" />
+                  {blurbs.get(tool.slug) ? (
+                    <p className="mt-3 text-sm leading-relaxed text-muted">
+                      {blurbs.get(tool.slug)}
+                    </p>
+                  ) : null}
+                </div>
               </li>
             ))}
           </ol>

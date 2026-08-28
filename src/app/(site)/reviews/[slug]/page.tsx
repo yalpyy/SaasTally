@@ -105,8 +105,7 @@ export default async function ReviewPage({ params }: { params: Promise<{ slug: s
                 <p className="text-[15px] leading-relaxed">{review.quickVerdict}</p>
                 <p className="mt-4 flex items-center gap-2 text-sm text-subtle">
                   Overall
-                  <Rating value={review.score} size="md" />
-                  / 5
+                  <Rating value={review.score} size="md" className="text-foreground" />
                 </p>
               </Card>
               <AffiliateDisclosure variant="panel" className="mt-6" />

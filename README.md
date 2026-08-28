@@ -84,7 +84,8 @@ be imported into a Client Component. `src/lib/supabase/server.ts` is marked
 ## Supabase setup
 
 1. Create a project at [supabase.com](https://supabase.com).
-2. Run `supabase/migrations/0001_init.sql` (SQL editor, or `npx supabase db push`).
+2. Run the migrations in `supabase/migrations/` in order (SQL editor, or
+   `npx supabase db push`).
 3. Copy the project URL and publishable key into `.env.local`.
 4. Create a staff user in **Authentication → Users**, then insert the matching
    profile row (see `supabase/migrations/README.md`). Without a `profiles` row a
@@ -99,7 +100,12 @@ be imported into a Client Component. `src/lib/supabase/server.ts` is marked
 - Anonymous readers see only `active` tools and `published` articles, reviews
   and comparisons.
 - `affiliate_clicks` is never readable by the public.
-- Commission columns are admin-only.
+- `affiliate_programs` is admin-read. RLS is row level, not column level, so a
+  policy that let anonymous clients see active rows would have handed them the
+  commission columns too — the publishable key ships in the browser. The public
+  site instead gets two narrow projections: the `active_affiliate_tools` view
+  (tool ids, for the sponsored label) and `active_affiliate_link()` (program id
+  and destination, for `/go`). Neither can return a commercial term.
 - Authorisation is enforced **server-side** in `requireStaff()`; hiding UI is
   not a security control.
 
@@ -178,7 +184,15 @@ blocking script applies the theme before paint, so there is no flash.
 
 **Honest structured data.** JSON-LD helpers only emit nodes for data that
 exists. There is no `aggregateRating` anywhere, because we do not have user
-ratings to aggregate.
+ratings to aggregate. A named author is credited as a `Person`; the house
+byline stays an `Organization`, because it is one.
+
+**One scoring scale.** Everything editorial is out of 10: `tools.rating`,
+`reviews.score` and the review breakdown criteria. A tool rating and a review
+score are still separate figures — the rating is the catalogue's summary and
+exists for tools we have not reviewed, the score is what a review argues for —
+but they are in the same units, so a reader moving between a card and a review
+is not comparing fifths to tenths.
 
 ---
 
@@ -187,12 +201,14 @@ ratings to aggregate.
 | Route                 | Purpose                                     | Access |
 | --------------------- | ------------------------------------------- | ------ |
 | `/admin`              | Dashboard: counts, recent content           | staff  |
-| `/admin/tools`        | Tool catalogue table                        | staff  |
-| `/admin/categories`   | Category table                              | staff  |
-| `/admin/articles`     | Article table                               | staff  |
-| `/admin/reviews`      | Review table                                | staff  |
-| `/admin/comparisons`  | Comparison table                            | staff  |
-| `/admin/affiliate`    | Programs, commission terms                  | admin  |
+| `/admin/tools`        | Tool catalogue — create and edit            | staff  |
+| `/admin/categories`   | Category table (read-only)                  | staff  |
+| `/admin/articles`     | Articles — create and edit                  | staff  |
+| `/admin/reviews`      | Reviews — create and edit                   | staff  |
+| `/admin/comparisons`  | Comparisons — create and edit               | staff  |
+| `/admin/best`         | Best lists — create, order and edit         | staff  |
+| `/admin/authors`      | Author bylines — create and edit            | staff  |
+| `/admin/affiliate`    | Programs, commission terms — admin only     | admin  |
 | `/admin/media`        | Storage bucket overview                     | staff  |
 | `/admin/settings`     | Environment + site settings                 | admin  |
 | `/admin/login`        | Supabase Auth sign-in                       | public |
@@ -239,11 +255,11 @@ vendor's own site — a dead CTA is worse than an unattributed click.
 5. After the first deploy, submit `https://saastally.com/sitemap.xml` in Search
    Console.
 
-> Note: `generateStaticParams` and `sitemap.ts` read through the service layer.
-> In mock mode they build statically. Once Supabase is live, those reads use a
-> cookie-scoped client; if you want them fully static at build time, give the
-> service layer a cookie-free anon client for build-time reads (a small,
-> contained change in `src/lib/supabase/server.ts`).
+> Note: `generateStaticParams` and `sitemap.ts` read through the service layer,
+> which uses the cookie-free anonymous client (`createReadSupabase`). They build
+> statically in both modes. Public pages revalidate hourly, and the admin
+> actions call `revalidatePath` for the rows they touch, so an edit is live
+> without a deploy.
 
 ---
 

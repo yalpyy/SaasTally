@@ -4,7 +4,10 @@ import { createReadSupabase } from "@/lib/supabase/server";
 import type { ArticleRow } from "@/lib/supabase/database.types";
 import type { Article, ContentStatus } from "@/types";
 
-function mapArticleRow(row: ArticleRow): Article {
+/** The joined byline. Null `author_id` is the house byline, not a missing one. */
+type ArticleWithAuthor = ArticleRow & { authors: { name: string; slug: string } | null };
+
+function mapArticleRow(row: ArticleWithAuthor): Article {
   return {
     id: row.id,
     title: row.title,
@@ -13,7 +16,8 @@ function mapArticleRow(row: ArticleRow): Article {
     content: row.content ?? "",
     featuredImage: row.featured_image,
     status: (row.status as ContentStatus) ?? "draft",
-    authorName: row.author_name ?? "SaaSTally Editorial",
+    authorName: row.authors?.name ?? "SaaSTally Editorial",
+    authorSlug: row.authors?.slug ?? null,
     categorySlug: row.category_slug,
     readingMinutes: row.reading_minutes ?? 5,
     seoTitle: row.seo_title,
@@ -31,12 +35,12 @@ async function liveArticles(): Promise<Article[] | null> {
 
   const { data, error } = await supabase
     .from("articles")
-    .select("*")
+    .select("*, authors(name, slug)")
     .eq("status", "published")
     .order("published_at", { ascending: false });
 
   if (error || !data) return null;
-  return (data as unknown as ArticleRow[]).map(mapArticleRow);
+  return (data as unknown as ArticleWithAuthor[]).map(mapArticleRow);
 }
 
 export async function getArticles(): Promise<Article[]> {

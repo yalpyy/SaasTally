@@ -16,7 +16,7 @@ export const tools: Tool[] = [
     shortDescription: "SEO & competitive research",
     description:
       "Semrush is a broad marketing visibility suite covering keyword research, rank tracking, backlink analysis, technical site audits and paid search intelligence. It is most often adopted by teams that want one platform for organic and paid research rather than a specialist point tool.",
-    rating: 4.7,
+    rating: 9.4,
     startingPrice: "From $139/mo",
     pricingModel: "subscription",
     companyName: "Semrush Holdings",
@@ -92,7 +92,7 @@ export const tools: Tool[] = [
     shortDescription: "Backlink analysis and keyword research",
     description:
       "Ahrefs is an SEO toolset best known for its backlink index and crawler. It covers keyword research, rank tracking, site audits and content exploration, with a workflow that many practitioners find faster for link and competitor investigation.",
-    rating: 4.6,
+    rating: 9.2,
     startingPrice: "From $129/mo",
     pricingModel: "subscription",
     companyName: "Ahrefs Pte",
@@ -156,7 +156,7 @@ export const tools: Tool[] = [
     shortDescription: "Docs, wikis and lightweight databases",
     description:
       "Notion combines documents, wikis and flexible databases in one workspace. Teams use it as a knowledge base, a lightweight project tracker, or both, which makes it unusually adaptable but also easy to let sprawl.",
-    rating: 4.5,
+    rating: 9.0,
     startingPrice: "Free plan available",
     pricingModel: "freemium",
     companyName: "Notion Labs",
@@ -219,7 +219,7 @@ export const tools: Tool[] = [
     shortDescription: "Hosted e-commerce platform",
     description:
       "Shopify is a hosted commerce platform covering storefronts, checkout, payments, inventory and a large app ecosystem. It trades some flexibility for operational simplicity: you do not manage hosting, PCI scope or checkout infrastructure yourself.",
-    rating: 4.6,
+    rating: 9.2,
     startingPrice: "From $39/mo",
     pricingModel: "subscription",
     companyName: "Shopify Inc.",
@@ -282,7 +282,7 @@ export const tools: Tool[] = [
     shortDescription: "CRM and marketing automation",
     description:
       "HubSpot is a connected CRM platform spanning marketing, sales and service. Its appeal is a single contact record shared across teams; its main risk is cost growth as contact volumes and premium features expand.",
-    rating: 4.4,
+    rating: 8.8,
     startingPrice: "Free CRM available",
     pricingModel: "freemium",
     companyName: "HubSpot, Inc.",
@@ -345,7 +345,7 @@ export const tools: Tool[] = [
     shortDescription: "Budget-friendly web hosting",
     description:
       "Hostinger offers shared, WordPress and VPS hosting aimed at price-sensitive site owners. It competes primarily on introductory pricing and a simplified control panel rather than on advanced infrastructure controls.",
-    rating: 4.3,
+    rating: 8.6,
     startingPrice: "From $2.99/mo",
     pricingModel: "subscription",
     companyName: "Hostinger International",
