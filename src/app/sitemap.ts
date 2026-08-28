@@ -12,7 +12,13 @@ import { absoluteUrl } from "@/lib/site";
  *
  * Excluded on purpose: /admin, /api, /go and /search — none of which should
  * ever be surfaced to a crawler.
+ *
+ * Revalidated hourly for the same reason the site pages are: a sitemap frozen
+ * at build time would keep pointing crawlers at yesterday's catalogue and omit
+ * everything published since.
  */
+export const revalidate = 3600;
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const [toolSlugs, categorySlugs, articles, comparisons, reviews, bestSlugs] = await Promise.all([
     getToolSlugs(),
