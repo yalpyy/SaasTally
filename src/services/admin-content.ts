@@ -222,3 +222,110 @@ export async function getReviewForEdit(id: string): Promise<AdminReviewRow | nul
   if (error || !data) return null;
   return mapReview(data as unknown as ReviewEditRow);
 }
+
+/* ------------------------------------------------------------------------- */
+/* Best lists                                                                */
+/* ------------------------------------------------------------------------- */
+
+export interface AdminBestListRow {
+  id: string;
+  title: string;
+  slug: string;
+  description: string;
+  intro: string;
+  categoryId: string;
+  categoryName: string;
+  /** `tool-slug | blurb` per line, in position order — how the form collects it. */
+  entries: string;
+  toolCount: number;
+  status: string;
+  publishedAt: string;
+  updatedAt: string;
+}
+
+interface BestListEditRow {
+  id: string;
+  title: string;
+  slug: string;
+  description: string | null;
+  intro: string | null;
+  category_id: string | null;
+  status: string;
+  published_at: string | null;
+  updated_at: string;
+  categories: { name: string } | null;
+  best_list_items:
+    | { position: number; blurb: string | null; tools: { slug: string } | null }[]
+    | null;
+}
+
+const bestListSelection =
+  "id, title, slug, description, intro, category_id, status, published_at, updated_at, categories(name), best_list_items(position, blurb, tools(slug))";
+
+function mapBestList(row: BestListEditRow): AdminBestListRow {
+  const items = (row.best_list_items ?? [])
+    .filter((item) => Boolean(item.tools?.slug))
+    .sort((a, b) => a.position - b.position);
+
+  return {
+    id: row.id,
+    title: row.title,
+    slug: row.slug,
+    description: str(row.description),
+    intro: str(row.intro),
+    categoryId: str(row.category_id),
+    categoryName: row.categories?.name ?? "—",
+    entries: items
+      .map((item) => (item.blurb ? `${item.tools!.slug} | ${item.blurb}` : item.tools!.slug))
+      .join("\n"),
+    toolCount: items.length,
+    status: row.status,
+    publishedAt: toLocalInput(row.published_at),
+    updatedAt: row.updated_at,
+  };
+}
+
+export async function listBestListsForAdmin(): Promise<AdminBestListRow[] | null> {
+  const supabase = await createServerSupabase();
+  if (!supabase) return null;
+
+  const { data, error } = await supabase
+    .from("best_lists")
+    .select(bestListSelection)
+    .order("updated_at", { ascending: false });
+
+  if (error || !data) return null;
+  return (data as unknown as BestListEditRow[]).map(mapBestList);
+}
+
+export async function getBestListForEdit(id: string): Promise<AdminBestListRow | null> {
+  const supabase = await createServerSupabase();
+  if (!supabase) return null;
+
+  const { data, error } = await supabase
+    .from("best_lists")
+    .select(bestListSelection)
+    .eq("id", id)
+    .maybeSingle();
+
+  if (error || !data) return null;
+  return mapBestList(data as unknown as BestListEditRow);
+}
+
+export interface CategoryOption {
+  id: string;
+  name: string;
+}
+
+export async function listCategoryOptions(): Promise<CategoryOption[]> {
+  const supabase = await createServerSupabase();
+  if (!supabase) return [];
+
+  const { data, error } = await supabase
+    .from("categories")
+    .select("id, name")
+    .order("name", { ascending: true });
+
+  if (error || !data) return [];
+  return data as unknown as CategoryOption[];
+}

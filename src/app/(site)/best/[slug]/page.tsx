@@ -64,6 +64,10 @@ export default async function BestListPage({ params }: { params: Promise<{ slug:
       />
 
       <Container className="py-12 sm:py-16">
+        {list.intro ? (
+          <p className="mb-10 max-w-3xl text-[15px] leading-relaxed text-muted">{list.intro}</p>
+        ) : null}
+
         {tools.length > 0 ? (
           <ol className="space-y-4">
             {tools.map((tool, index) => (

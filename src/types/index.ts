@@ -160,6 +160,8 @@ export interface BestList {
   slug: string;
   title: string;
   description: string;
+  /** States the criteria before the conclusions. Optional. */
+  intro: string;
   categorySlug: string;
   /** Editorially ordered. Position is a judgement, never a commission figure. */
   items: BestListItem[];

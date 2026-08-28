@@ -15,6 +15,7 @@ interface BestListRow {
   title: string;
   slug: string;
   description: string | null;
+  intro: string | null;
   status: ContentStatus;
   updated_at: string;
   categories: { slug: string } | null;
@@ -33,6 +34,7 @@ function mapBestListRow(row: BestListRow): BestList {
     slug: row.slug,
     title: row.title,
     description: row.description ?? "",
+    intro: row.intro ?? "",
     categorySlug: row.categories?.slug ?? "",
     items,
     status: row.status,
@@ -48,7 +50,7 @@ async function liveBestLists(): Promise<BestList[] | null> {
   const { data, error } = await supabase
     .from("best_lists")
     .select(
-      "title, slug, description, status, updated_at, categories(slug), best_list_items(position, blurb, tools(slug))",
+      "title, slug, description, intro, status, updated_at, categories(slug), best_list_items(position, blurb, tools(slug))",
     )
     .eq("status", "published")
     .order("updated_at", { ascending: false });
