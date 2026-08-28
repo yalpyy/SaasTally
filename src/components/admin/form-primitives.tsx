@@ -60,12 +60,17 @@ export function Field({
       </label>
       {hint ? <p className="mb-2 mt-1 text-xs text-subtle">{hint}</p> : <div className="mt-2" />}
       {children}
-      {error ? (
-        <p className="mt-2 text-xs text-danger" role="alert">
-          {error.join(". ")}
-        </p>
-      ) : null}
+      {error ? <FieldError messages={error} /> : null}
     </div>
+  );
+}
+
+/** Exported separately for the few controls that are not wrapped in a Field. */
+export function FieldError({ messages }: { messages: string[] }) {
+  return (
+    <p className="mt-2 text-xs text-danger" role="alert">
+      {messages.join(". ")}
+    </p>
   );
 }
 

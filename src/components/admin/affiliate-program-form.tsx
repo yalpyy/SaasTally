@@ -1,8 +1,6 @@
 "use client";
 
 import { useActionState } from "react";
-import Link from "next/link";
-import { AlertTriangle, Loader2 } from "lucide-react";
 import {
   createProgramAction,
   updateProgramAction,
@@ -10,6 +8,7 @@ import {
   type ProgramFormState,
 } from "@/app/(admin)/admin/affiliate/actions";
 import { commissionTypes, affiliateStatuses } from "@/lib/validation/affiliate-program";
+import { Field, Fieldset, FormError, SubmitRow, inputClass } from "@/components/admin/form-primitives";
 
 /**
  * Form-ready values, declared here rather than imported from the service so
@@ -45,9 +44,6 @@ const statusLabels: Record<(typeof affiliateStatuses)[number], string> = {
   pending: "Pending — application not approved yet",
 };
 
-const inputClass =
-  "w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm outline-none transition-colors placeholder:text-subtle focus:border-border-strong";
-
 export function AffiliateProgramForm({
   tools,
   program,
@@ -78,15 +74,7 @@ export function AffiliateProgramForm({
     <form action={formAction} className="space-y-8">
       {isEdit ? <input type="hidden" name="id" value={program!.id} /> : null}
 
-      {state.status === "error" && state.message ? (
-        <div
-          role="alert"
-          className="flex gap-3 rounded-card border border-danger/30 bg-danger/5 p-4 text-sm"
-        >
-          <AlertTriangle className="mt-0.5 size-4 shrink-0 text-danger" aria-hidden="true" />
-          <p className="leading-relaxed text-muted">{state.message}</p>
-        </div>
-      ) : null}
+      {state.status === "error" ? <FormError message={state.message} /> : null}
 
       <Fieldset
         title="Partnership"
@@ -216,81 +204,11 @@ export function AffiliateProgramForm({
         </Field>
       </Fieldset>
 
-      <div className="flex flex-wrap items-center gap-3">
-        <button
-          type="submit"
-          disabled={isPending}
-          className="inline-flex h-11 items-center gap-2 rounded-xl bg-primary px-5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary-hover disabled:opacity-60"
-        >
-          {isPending ? <Loader2 className="size-4 animate-spin" aria-hidden="true" /> : null}
-          {isEdit ? "Save changes" : "Create program"}
-        </button>
-
-        <Link
-          href="/admin/affiliate"
-          className="inline-flex h-11 items-center rounded-xl border border-border px-5 text-sm font-medium transition-colors hover:bg-card-hover"
-        >
-          Cancel
-        </Link>
-      </div>
+      <SubmitRow
+        label={isEdit ? "Save changes" : "Create program"}
+        cancelHref="/admin/affiliate"
+        pending={isPending}
+      />
     </form>
-  );
-}
-
-/* ------------------------------------------------------------------------- */
-/* Local building blocks — nothing else uses them, so they stay in this file. */
-/* ------------------------------------------------------------------------- */
-
-function Fieldset({
-  title,
-  description,
-  children,
-}: {
-  title: string;
-  description?: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <fieldset className="rounded-card border border-border bg-card p-6">
-      <legend className="px-2 text-sm font-semibold">{title}</legend>
-      {description ? <p className="mb-5 mt-1 text-sm text-muted">{description}</p> : null}
-      <div className="space-y-5">{children}</div>
-    </fieldset>
-  );
-}
-
-function Field({
-  label,
-  name,
-  hint,
-  error,
-  required,
-  children,
-}: {
-  label: string;
-  name: string;
-  hint?: string;
-  error?: string[];
-  required?: boolean;
-  children: React.ReactNode;
-}) {
-  return (
-    <div>
-      <label htmlFor={name} className="block text-sm font-medium">
-        {label}
-        {required ? (
-          <span className="ml-1 text-danger" aria-hidden="true">
-            *
-          </span>
-        ) : null}
-      </label>
-      {hint ? <p className="mb-2 mt-1 text-xs text-subtle">{hint}</p> : <div className="mt-2" />}
-      {children}
-      {error ? (
-        <p className="mt-2 text-xs text-danger" role="alert">
-          {error.join(". ")}
-        </p>
-      ) : null}
-    </div>
   );
 }

@@ -403,6 +403,89 @@ export async function getComparisonForEdit(id: string): Promise<AdminComparisonR
   return mapComparison(data as unknown as ComparisonEditRow);
 }
 
+/* ------------------------------------------------------------------------- */
+/* Articles                                                                  */
+/* ------------------------------------------------------------------------- */
+
+export interface AdminArticleRow {
+  id: string;
+  title: string;
+  slug: string;
+  excerpt: string;
+  content: string;
+  featuredImage: string;
+  authorName: string;
+  categorySlug: string;
+  readingMinutes: string;
+  seoTitle: string;
+  seoDescription: string;
+  canonicalUrl: string;
+  status: string;
+  publishedAt: string;
+  updatedAt: string;
+}
+
+interface ArticleEditRow {
+  id: string;
+  title: string;
+  slug: string;
+  excerpt: string | null;
+  content: string | null;
+  featured_image: string | null;
+  author_name: string | null;
+  category_slug: string | null;
+  reading_minutes: number | null;
+  seo_title: string | null;
+  seo_description: string | null;
+  canonical_url: string | null;
+  status: string;
+  published_at: string | null;
+  updated_at: string;
+}
+
+function mapArticle(row: ArticleEditRow): AdminArticleRow {
+  return {
+    id: row.id,
+    title: row.title,
+    slug: row.slug,
+    excerpt: str(row.excerpt),
+    content: str(row.content),
+    featuredImage: str(row.featured_image),
+    authorName: str(row.author_name),
+    categorySlug: str(row.category_slug),
+    readingMinutes: num(row.reading_minutes),
+    seoTitle: str(row.seo_title),
+    seoDescription: str(row.seo_description),
+    canonicalUrl: str(row.canonical_url),
+    status: row.status,
+    publishedAt: toLocalInput(row.published_at),
+    updatedAt: row.updated_at,
+  };
+}
+
+export async function listArticlesForAdmin(): Promise<AdminArticleRow[] | null> {
+  const supabase = await createServerSupabase();
+  if (!supabase) return null;
+
+  const { data, error } = await supabase
+    .from("articles")
+    .select("*")
+    .order("updated_at", { ascending: false });
+
+  if (error || !data) return null;
+  return (data as unknown as ArticleEditRow[]).map(mapArticle);
+}
+
+export async function getArticleForEdit(id: string): Promise<AdminArticleRow | null> {
+  const supabase = await createServerSupabase();
+  if (!supabase) return null;
+
+  const { data, error } = await supabase.from("articles").select("*").eq("id", id).maybeSingle();
+
+  if (error || !data) return null;
+  return mapArticle(data as unknown as ArticleEditRow);
+}
+
 export interface CategoryOption {
   id: string;
   name: string;
