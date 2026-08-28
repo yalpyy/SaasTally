@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { getActiveProgram, recordClick } from "@/lib/affiliate/programs";
+import { getActiveProgramLink, recordClick } from "@/lib/affiliate/programs";
 import { getToolBySlug } from "@/services/tools";
 import { absoluteUrl } from "@/lib/site";
 
@@ -35,7 +35,7 @@ export async function GET(
     return NextResponse.redirect(absoluteUrl("/software"), 302);
   }
 
-  const program = await getActiveProgram(slug);
+  const program = await getActiveProgramLink(slug);
   const destination = program?.affiliateUrl ?? tool.websiteUrl;
 
   if (program) {

@@ -3,54 +3,44 @@ import "server-only";
 import { affiliatePrograms as fixturePrograms } from "@/data/affiliate-programs";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { createReadSupabase, createServiceSupabase } from "@/lib/supabase/server";
-import type { AffiliateProgram } from "@/types";
 
-/** Resolve the single active affiliate program for a tool, if one exists. */
-export async function getActiveProgram(toolSlug: string): Promise<AffiliateProgram | null> {
+/**
+ * The only affiliate data a public request may resolve: which program to
+ * attribute the click to, and where to send the visitor.
+ *
+ * Commission terms are deliberately absent. They are admin-only in the
+ * database (migration 0002), and nothing on the public path has any business
+ * reading them — the editorial firewall is easier to keep when the commercial
+ * columns cannot travel this far in the first place.
+ */
+export interface AffiliateLink {
+  id: string;
+  affiliateUrl: string;
+}
+
+/**
+ * Resolve the redirect target for a tool, if it has an active program.
+ *
+ * Goes through the `active_affiliate_link` function rather than selecting from
+ * `affiliate_programs` directly: anonymous clients can no longer read that
+ * table, and the function returns only the program id and the destination.
+ */
+export async function getActiveProgramLink(toolSlug: string): Promise<AffiliateLink | null> {
   if (isSupabaseConfigured()) {
     const supabase = await createReadSupabase();
     if (supabase) {
-      const { data } = await supabase
-        .from("affiliate_programs")
-        .select("id, network, program_name, affiliate_url, commission_type, commission_value, cookie_days, status, tools!inner(slug)")
-        .eq("status", "active")
-        .eq("tools.slug", toolSlug)
-        .limit(1)
-        .maybeSingle();
+      const { data } = await supabase.rpc("active_affiliate_link", { tool_slug: toolSlug });
+      const row = (data as { id: string; affiliate_url: string }[] | null)?.[0];
 
-      if (data) {
-        const row = data as unknown as {
-          id: string;
-          network: string | null;
-          program_name: string | null;
-          affiliate_url: string;
-          commission_type: string | null;
-          commission_value: string | null;
-          cookie_days: number | null;
-          status: string;
-        };
-
-        return {
-          id: row.id,
-          toolSlug,
-          network: row.network ?? "",
-          programName: row.program_name ?? "",
-          affiliateUrl: row.affiliate_url,
-          commissionType: (row.commission_type as AffiliateProgram["commissionType"]) ?? "flat",
-          commissionValue: row.commission_value ?? "",
-          cookieDays: row.cookie_days ?? 0,
-          status: "active",
-        };
-      }
-      return null;
+      return row ? { id: row.id, affiliateUrl: row.affiliate_url } : null;
     }
   }
 
-  return (
-    fixturePrograms.find(
-      (program) => program.toolSlug === toolSlug && program.status === "active",
-    ) ?? null
+  const fixture = fixturePrograms.find(
+    (program) => program.toolSlug === toolSlug && program.status === "active",
   );
+
+  return fixture ? { id: fixture.id, affiliateUrl: fixture.affiliateUrl } : null;
 }
 
 export interface ClickContext {
