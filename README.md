@@ -84,7 +84,8 @@ be imported into a Client Component. `src/lib/supabase/server.ts` is marked
 ## Supabase setup
 
 1. Create a project at [supabase.com](https://supabase.com).
-2. Run `supabase/migrations/0001_init.sql` (SQL editor, or `npx supabase db push`).
+2. Run the migrations in `supabase/migrations/` in order (SQL editor, or
+   `npx supabase db push`).
 3. Copy the project URL and publishable key into `.env.local`.
 4. Create a staff user in **Authentication → Users**, then insert the matching
    profile row (see `supabase/migrations/README.md`). Without a `profiles` row a
@@ -99,7 +100,12 @@ be imported into a Client Component. `src/lib/supabase/server.ts` is marked
 - Anonymous readers see only `active` tools and `published` articles, reviews
   and comparisons.
 - `affiliate_clicks` is never readable by the public.
-- Commission columns are admin-only.
+- `affiliate_programs` is admin-read. RLS is row level, not column level, so a
+  policy that let anonymous clients see active rows would have handed them the
+  commission columns too — the publishable key ships in the browser. The public
+  site instead gets two narrow projections: the `active_affiliate_tools` view
+  (tool ids, for the sponsored label) and `active_affiliate_link()` (program id
+  and destination, for `/go`). Neither can return a commercial term.
 - Authorisation is enforced **server-side** in `requireStaff()`; hiding UI is
   not a security control.
 
@@ -239,11 +245,11 @@ vendor's own site — a dead CTA is worse than an unattributed click.
 5. After the first deploy, submit `https://saastally.com/sitemap.xml` in Search
    Console.
 
-> Note: `generateStaticParams` and `sitemap.ts` read through the service layer.
-> In mock mode they build statically. Once Supabase is live, those reads use a
-> cookie-scoped client; if you want them fully static at build time, give the
-> service layer a cookie-free anon client for build-time reads (a small,
-> contained change in `src/lib/supabase/server.ts`).
+> Note: `generateStaticParams` and `sitemap.ts` read through the service layer,
+> which uses the cookie-free anonymous client (`createReadSupabase`). They build
+> statically in both modes. Public pages revalidate hourly, and the admin
+> actions call `revalidatePath` for the rows they touch, so an edit is live
+> without a deploy.
 
 ---
 
