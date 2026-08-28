@@ -26,6 +26,7 @@ export default async function AdminArticlesPage() {
         excerpt: article.excerpt,
         content: article.content,
         featuredImage: article.featuredImage ?? "",
+        authorId: "",
         authorName: article.authorName,
         categorySlug: article.categorySlug ?? "",
         readingMinutes: String(article.readingMinutes),

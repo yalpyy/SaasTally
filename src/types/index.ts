@@ -52,7 +52,10 @@ export interface Tool {
   websiteUrl: string;
   shortDescription: string;
   description: string;
-  /** Editorial score out of 5. Never derived from affiliate commission. */
+  /**
+   * Catalogue score out of 10, the same scale as a review's. Never derived
+   * from affiliate commission.
+   */
   rating: number | null;
   startingPrice: string | null;
   pricingModel: PricingModel;
@@ -89,8 +92,9 @@ export interface Review {
   slug: string;
   quickVerdict: string;
   /**
-   * Out of 10, the same scale as `breakdown`. Distinct from `Tool.rating`,
-   * which is the 5-point star figure shown on cards.
+   * Out of 10, like `breakdown` and `Tool.rating`. Still a separate figure
+   * from the tool's: this is the score the review argues for, while the tool
+   * rating is the catalogue's summary and exists for unreviewed tools too.
    */
   score: number;
   breakdown: RatingCriterion[];
@@ -141,6 +145,7 @@ export interface Article {
   featuredImage: string | null;
   status: ContentStatus;
   authorName: string;
+  authorSlug: string | null;
   categorySlug: string | null;
   readingMinutes: number;
   seoTitle: string | null;

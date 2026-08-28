@@ -27,7 +27,7 @@ function readForm(formData: FormData) {
     excerpt: text(formData, "excerpt"),
     content: text(formData, "content"),
     featuredImage: text(formData, "featuredImage"),
-    authorName: text(formData, "authorName"),
+    authorId: text(formData, "authorId"),
     categorySlug: text(formData, "categorySlug"),
     readingMinutes: text(formData, "readingMinutes"),
     seoTitle: text(formData, "seoTitle"),
@@ -45,7 +45,7 @@ function toRow(input: ArticleInput) {
     excerpt: input.excerpt,
     content: input.content,
     featured_image: input.featuredImage,
-    author_name: input.authorName,
+    author_id: input.authorId,
     category_slug: input.categorySlug,
     // Left blank, it is measured from the body — a hand-typed figure stops
     // matching the article the first time anyone edits it.

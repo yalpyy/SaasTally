@@ -16,8 +16,15 @@ export const articleInputSchema = z.object({
   content: optionalText(60000),
   featuredImage: optionalText(500),
 
-  /** Free text rather than an authors row: articles predate that table. */
-  authorName: optionalText(120),
+  /** Blank means the house byline rather than a named person. */
+  authorId: z
+    .string()
+    .default("")
+    .transform((value) => (value.trim() === "" ? null : value.trim()))
+    .refine(
+      (value) => value === null || z.string().uuid().safeParse(value).success,
+      "Choose an author, or leave it as the house byline",
+    ),
   categorySlug: optionalText(80),
 
   /**

@@ -6,7 +6,7 @@ import { ModeBanner } from "@/components/admin/mode-banner";
 import { ArticleForm } from "@/components/admin/article-form";
 import { requireStaff } from "@/lib/auth";
 import { getCategories } from "@/services/categories";
-import { getArticleForEdit } from "@/services/admin-content";
+import { getArticleForEdit, listAuthorOptions } from "@/services/admin-content";
 
 export const metadata = { title: "Edit article" };
 
@@ -14,7 +14,11 @@ export default async function EditArticlePage({ params }: { params: Promise<{ id
   const profile = await requireStaff();
   const { id } = await params;
 
-  const [article, categories] = await Promise.all([getArticleForEdit(id), getCategories()]);
+  const [article, categories, authors] = await Promise.all([
+    getArticleForEdit(id),
+    getCategories(),
+    listAuthorOptions(),
+  ]);
   if (!article) notFound();
 
   return (
@@ -45,6 +49,7 @@ export default async function EditArticlePage({ params }: { params: Promise<{ id
         <div className="max-w-3xl">
           <ArticleForm
             categories={categories}
+            authors={authors}
             article={{
               id: article.id,
               title: article.title,
@@ -52,7 +57,7 @@ export default async function EditArticlePage({ params }: { params: Promise<{ id
               excerpt: article.excerpt,
               content: article.content,
               featuredImage: article.featuredImage,
-              authorName: article.authorName,
+              authorId: article.authorId,
               categorySlug: article.categorySlug,
               readingMinutes: article.readingMinutes,
               seoTitle: article.seoTitle,

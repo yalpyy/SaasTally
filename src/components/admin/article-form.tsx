@@ -25,7 +25,7 @@ export interface ArticleFormValues {
   excerpt: string;
   content: string;
   featuredImage: string;
-  authorName: string;
+  authorId: string;
   categorySlug: string;
   readingMinutes: string;
   seoTitle: string;
@@ -44,9 +44,11 @@ const statusLabels: Record<(typeof contentStatuses)[number], string> = {
 
 export function ArticleForm({
   categories,
+  authors,
   article,
 }: {
   categories: Category[];
+  authors: { id: string; name: string }[];
   article?: ArticleFormValues;
 }) {
   const isEdit = Boolean(article);
@@ -138,14 +140,25 @@ export function ArticleForm({
           </select>
         </Field>
 
-        <Field label="Author" name="authorName" error={errors.authorName} hint="Blank uses the house byline.">
-          <input
-            id="authorName"
-            name="authorName"
-            defaultValue={initial("authorName")}
+        <Field
+          label="Author"
+          name="authorId"
+          error={errors.authorId}
+          hint="Leave blank for the house byline. Named authors come from Authors, the same list reviews use."
+        >
+          <select
+            id="authorId"
+            name="authorId"
+            defaultValue={initial("authorId")}
             className={inputClass}
-            placeholder="SaaSTally Editorial"
-          />
+          >
+            <option value="">SaaSTally Editorial</option>
+            {authors.map((author) => (
+              <option key={author.id} value={author.id}>
+                {author.name}
+              </option>
+            ))}
+          </select>
         </Field>
       </Fieldset>
 

@@ -184,7 +184,15 @@ blocking script applies the theme before paint, so there is no flash.
 
 **Honest structured data.** JSON-LD helpers only emit nodes for data that
 exists. There is no `aggregateRating` anywhere, because we do not have user
-ratings to aggregate.
+ratings to aggregate. A named author is credited as a `Person`; the house
+byline stays an `Organization`, because it is one.
+
+**One scoring scale.** Everything editorial is out of 10: `tools.rating`,
+`reviews.score` and the review breakdown criteria. A tool rating and a review
+score are still separate figures — the rating is the catalogue's summary and
+exists for tools we have not reviewed, the score is what a review argues for —
+but they are in the same units, so a reader moving between a card and a review
+is not comparing fifths to tenths.
 
 ---
 

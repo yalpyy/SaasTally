@@ -259,7 +259,7 @@ export function ToolForm({
           label="Editorial rating"
           name="rating"
           error={errors.rating}
-          hint="0–5. Leave blank until you have actually assessed it — we never invent scores."
+          hint="0–10, the same scale as a review score. Leave blank until you have actually assessed it — we never invent scores."
         >
           <input
             id="rating"
@@ -267,7 +267,7 @@ export function ToolForm({
             type="number"
             step="0.1"
             min="0"
-            max="5"
+            max="10"
             defaultValue={initial("rating")}
             className={inputClass}
           />

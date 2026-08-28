@@ -53,8 +53,8 @@ export interface ArticleRow {
   content: string | null;
   featured_image: string | null;
   status: string;
+  /** References `authors` since migration 0004; null means the house byline. */
   author_id: string | null;
-  author_name: string | null;
   category_slug: string | null;
   reading_minutes: number | null;
   seo_title: string | null;

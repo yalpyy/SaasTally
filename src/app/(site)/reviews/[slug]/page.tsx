@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { ArrowUpRight } from "lucide-react";
 import { Container } from "@/components/ui/container";
 import { Card } from "@/components/ui/card";
+import { Rating } from "@/components/ui/rating";
 import { RatingBreakdown } from "@/components/ui/rating-breakdown";
 import { ProsCons } from "@/components/ui/pros-cons";
 import { ToolLogo } from "@/components/ui/tool-logo";
@@ -102,12 +103,9 @@ export default async function ReviewPage({ params }: { params: Promise<{ slug: s
               </h2>
               <Card className="mt-4 border-l-2 border-l-primary p-6">
                 <p className="text-[15px] leading-relaxed">{review.quickVerdict}</p>
-                <p className="mt-4 flex items-baseline gap-2 text-sm text-subtle">
+                <p className="mt-4 flex items-center gap-2 text-sm text-subtle">
                   Overall
-                  <span className="text-base font-semibold tabular-nums text-foreground">
-                    {review.score.toFixed(1)}
-                  </span>
-                  / 10
+                  <Rating value={review.score} size="md" className="text-foreground" />
                 </p>
               </Card>
               <AffiliateDisclosure variant="panel" className="mt-6" />

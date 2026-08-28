@@ -121,7 +121,12 @@ export function articleSchema(article: Article): Record<string, unknown> {
     datePublished: article.publishedAt,
     dateModified: article.updatedAt,
     mainEntityOfPage: absoluteUrl(`/articles/${article.slug}`),
-    author: { "@type": "Organization", name: siteConfig.name },
+    // Same rule as reviews: a named author is a Person, the house byline is
+    // the organisation. Now that both content types share the authors table,
+    // they can finally share the rule too.
+    author: article.authorSlug
+      ? { "@type": "Person", name: article.authorName }
+      : { "@type": "Organization", name: siteConfig.name },
     publisher: { "@type": "Organization", name: siteConfig.name },
   };
 }

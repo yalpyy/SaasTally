@@ -414,6 +414,7 @@ export interface AdminArticleRow {
   excerpt: string;
   content: string;
   featuredImage: string;
+  authorId: string;
   authorName: string;
   categorySlug: string;
   readingMinutes: string;
@@ -432,7 +433,7 @@ interface ArticleEditRow {
   excerpt: string | null;
   content: string | null;
   featured_image: string | null;
-  author_name: string | null;
+  author_id: string | null;
   category_slug: string | null;
   reading_minutes: number | null;
   seo_title: string | null;
@@ -441,6 +442,7 @@ interface ArticleEditRow {
   status: string;
   published_at: string | null;
   updated_at: string;
+  authors: { name: string } | null;
 }
 
 function mapArticle(row: ArticleEditRow): AdminArticleRow {
@@ -451,7 +453,8 @@ function mapArticle(row: ArticleEditRow): AdminArticleRow {
     excerpt: str(row.excerpt),
     content: str(row.content),
     featuredImage: str(row.featured_image),
-    authorName: str(row.author_name),
+    authorId: str(row.author_id),
+    authorName: row.authors?.name ?? "SaaSTally Editorial",
     categorySlug: str(row.category_slug),
     readingMinutes: num(row.reading_minutes),
     seoTitle: str(row.seo_title),
@@ -469,7 +472,7 @@ export async function listArticlesForAdmin(): Promise<AdminArticleRow[] | null> 
 
   const { data, error } = await supabase
     .from("articles")
-    .select("*")
+    .select("*, authors(name)")
     .order("updated_at", { ascending: false });
 
   if (error || !data) return null;
@@ -480,7 +483,11 @@ export async function getArticleForEdit(id: string): Promise<AdminArticleRow | n
   const supabase = await createServerSupabase();
   if (!supabase) return null;
 
-  const { data, error } = await supabase.from("articles").select("*").eq("id", id).maybeSingle();
+  const { data, error } = await supabase
+    .from("articles")
+    .select("*, authors(name)")
+    .eq("id", id)
+    .maybeSingle();
 
   if (error || !data) return null;
   return mapArticle(data as unknown as ArticleEditRow);

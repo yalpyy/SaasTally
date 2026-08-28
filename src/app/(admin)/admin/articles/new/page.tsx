@@ -5,12 +5,13 @@ import { ModeBanner } from "@/components/admin/mode-banner";
 import { ArticleForm } from "@/components/admin/article-form";
 import { requireStaff } from "@/lib/auth";
 import { getCategories } from "@/services/categories";
+import { listAuthorOptions } from "@/services/admin-content";
 
 export const metadata = { title: "New article" };
 
 export default async function NewArticlePage() {
   const profile = await requireStaff();
-  const categories = await getCategories();
+  const [categories, authors] = await Promise.all([getCategories(), listAuthorOptions()]);
 
   return (
     <>
@@ -28,7 +29,7 @@ export default async function NewArticlePage() {
         </Link>
 
         <div className="max-w-3xl">
-          <ArticleForm categories={categories} />
+          <ArticleForm categories={categories} authors={authors} />
         </div>
       </div>
     </>
