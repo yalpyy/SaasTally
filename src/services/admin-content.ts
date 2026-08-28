@@ -312,6 +312,97 @@ export async function getBestListForEdit(id: string): Promise<AdminBestListRow |
   return mapBestList(data as unknown as BestListEditRow);
 }
 
+/* ------------------------------------------------------------------------- */
+/* Comparisons                                                               */
+/* ------------------------------------------------------------------------- */
+
+export interface AdminComparisonRow {
+  id: string;
+  title: string;
+  slug: string;
+  toolAId: string;
+  toolBId: string;
+  toolAName: string;
+  toolBName: string;
+  quickVerdict: string;
+  recommendation: string;
+  /** `label | a | b | winner` per line — how the form collects it. */
+  attributes: string;
+  rowCount: number;
+  status: string;
+  publishedAt: string;
+  updatedAt: string;
+}
+
+interface ComparisonEditRow {
+  id: string;
+  title: string;
+  slug: string;
+  tool_a_id: string | null;
+  tool_b_id: string | null;
+  quick_verdict: string | null;
+  recommendation: string | null;
+  attributes: { label: string; a: string; b: string; winner: string }[] | null;
+  status: string;
+  published_at: string | null;
+  updated_at: string;
+  tool_a: { name: string } | null;
+  tool_b: { name: string } | null;
+}
+
+const comparisonSelection =
+  "id, title, slug, tool_a_id, tool_b_id, quick_verdict, recommendation, attributes, status, published_at, updated_at, tool_a:tools!comparisons_tool_a_id_fkey(name), tool_b:tools!comparisons_tool_b_id_fkey(name)";
+
+function mapComparison(row: ComparisonEditRow): AdminComparisonRow {
+  const attributes = row.attributes ?? [];
+
+  return {
+    id: row.id,
+    title: row.title,
+    slug: row.slug,
+    toolAId: str(row.tool_a_id),
+    toolBId: str(row.tool_b_id),
+    toolAName: row.tool_a?.name ?? "—",
+    toolBName: row.tool_b?.name ?? "—",
+    quickVerdict: str(row.quick_verdict),
+    recommendation: str(row.recommendation),
+    attributes: attributes
+      .map((attribute) => `${attribute.label} | ${attribute.a} | ${attribute.b} | ${attribute.winner}`)
+      .join("\n"),
+    rowCount: attributes.length,
+    status: row.status,
+    publishedAt: toLocalInput(row.published_at),
+    updatedAt: row.updated_at,
+  };
+}
+
+export async function listComparisonsForAdmin(): Promise<AdminComparisonRow[] | null> {
+  const supabase = await createServerSupabase();
+  if (!supabase) return null;
+
+  const { data, error } = await supabase
+    .from("comparisons")
+    .select(comparisonSelection)
+    .order("updated_at", { ascending: false });
+
+  if (error || !data) return null;
+  return (data as unknown as ComparisonEditRow[]).map(mapComparison);
+}
+
+export async function getComparisonForEdit(id: string): Promise<AdminComparisonRow | null> {
+  const supabase = await createServerSupabase();
+  if (!supabase) return null;
+
+  const { data, error } = await supabase
+    .from("comparisons")
+    .select(comparisonSelection)
+    .eq("id", id)
+    .maybeSingle();
+
+  if (error || !data) return null;
+  return mapComparison(data as unknown as ComparisonEditRow);
+}
+
 export interface CategoryOption {
   id: string;
   name: string;
