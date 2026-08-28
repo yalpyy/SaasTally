@@ -83,10 +83,37 @@ export const scoreField = z
     "Score must be a number between 0 and 10, or left blank",
   );
 
-/** Suggest a slug from a title, so editors rarely have to type one. */
+/**
+ * Letters that carry no combining mark to strip, so normalisation alone would
+ * drop them. Turkish dotless ı is the one that matters here — without it,
+ * "Üçgen Yazılım" slugs as "ucgen-yazlm", losing a letter from the middle of a
+ * word rather than merely flattening an accent.
+ */
+const TRANSLITERATIONS: Record<string, string> = {
+  ı: "i",
+  ß: "ss",
+  đ: "d",
+  ø: "o",
+  æ: "ae",
+  œ: "oe",
+  ł: "l",
+};
+
+/**
+ * Suggest a slug from a title, so editors rarely have to type one.
+ *
+ * Accented and non-English letters are transliterated rather than deleted. The
+ * naive version stripped anything outside a-z, which turned "Şirket Aracı"
+ * into "irket-arac" — a URL that is neither readable nor guessable, quietly
+ * produced at the moment someone typed a perfectly ordinary name.
+ */
 export function suggestSlug(name: string): string {
   return name
     .toLowerCase()
+    .replace(/[ıßđøæœł]/g, (character) => TRANSLITERATIONS[character] ?? character)
+    // Decompose, then drop the combining marks: é becomes e, ş becomes s.
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
     .trim()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
