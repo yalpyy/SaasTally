@@ -95,7 +95,17 @@ function refreshPublicPages(slug: string, categorySlugs: string[]) {
  * The write then goes through the **session** client, meaning Postgres RLS
  * re-checks the caller's role. Two independent gates, deliberately.
  */
-async function prepare(formData: FormData) {
+type PrepareResult =
+  | { ok: false; failure: ToolFormState }
+  | {
+      ok: true;
+      supabase: NonNullable<Awaited<ReturnType<typeof createServerSupabase>>>;
+      input: ToolInput;
+      categories: { id: string; slug: string }[];
+      raw: ToolFormState["values"];
+    };
+
+async function prepare(formData: FormData): Promise<PrepareResult> {
   await requireStaff();
 
   const raw = readForm(formData);
@@ -103,8 +113,9 @@ async function prepare(formData: FormData) {
 
   if (!parsed.success) {
     return {
+      ok: false,
       failure: {
-        status: "error" as const,
+        status: "error",
         message: "Some fields need attention.",
         fieldErrors: parsed.error.flatten().fieldErrors as Record<string, string[]>,
         values: raw,
@@ -114,8 +125,9 @@ async function prepare(formData: FormData) {
 
   if (!isSupabaseConfigured()) {
     return {
+      ok: false,
       failure: {
-        status: "error" as const,
+        status: "error",
         message:
           "Supabase is not configured, so nothing can be saved. Add the environment variables and try again.",
         values: raw,
@@ -126,7 +138,8 @@ async function prepare(formData: FormData) {
   const supabase = await createServerSupabase();
   if (!supabase) {
     return {
-      failure: { status: "error" as const, message: "Could not reach the database.", values: raw },
+      ok: false,
+      failure: { status: "error", message: "Could not reach the database.", values: raw },
     };
   }
 
@@ -137,7 +150,8 @@ async function prepare(formData: FormData) {
 
   if (categoryError) {
     return {
-      failure: { status: "error" as const, message: "Could not load categories.", values: raw },
+      ok: false,
+      failure: { status: "error", message: "Could not load categories.", values: raw },
     };
   }
 
@@ -145,15 +159,16 @@ async function prepare(formData: FormData) {
 
   if (categories.length !== parsed.data.categorySlugs.length) {
     return {
+      ok: false,
       failure: {
-        status: "error" as const,
+        status: "error",
         message: "One of the selected categories no longer exists. Reload and try again.",
         values: raw,
       },
     };
   }
 
-  return { supabase, input: parsed.data, categories, raw };
+  return { ok: true, supabase, input: parsed.data, categories, raw };
 }
 
 function duplicateSlugFailure(slug: string, raw: ToolFormState["values"]): ToolFormState {
@@ -170,7 +185,7 @@ export async function createToolAction(
   formData: FormData,
 ): Promise<ToolFormState> {
   const prepared = await prepare(formData);
-  if ("failure" in prepared) return prepared.failure;
+  if (!prepared.ok) return prepared.failure;
 
   const { supabase, input, categories, raw } = prepared;
 
@@ -221,7 +236,7 @@ export async function updateToolAction(
   }
 
   const prepared = await prepare(formData);
-  if ("failure" in prepared) return prepared.failure;
+  if (!prepared.ok) return prepared.failure;
 
   const { supabase, input, categories, raw } = prepared;
 
