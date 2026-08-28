@@ -75,7 +75,7 @@ export function AuthorForm({ author }: { author?: AuthorFormValues }) {
           name="slug"
           error={errors.slug}
           required
-          hint={isEdit ? "Changing this changes the author's URL." : "Becomes /authors/your-slug"}
+          hint="Identifies the author. Public author pages are not built yet, so nothing links to this today."
         >
           <input
             id="slug"

@@ -193,12 +193,14 @@ ratings to aggregate.
 | Route                 | Purpose                                     | Access |
 | --------------------- | ------------------------------------------- | ------ |
 | `/admin`              | Dashboard: counts, recent content           | staff  |
-| `/admin/tools`        | Tool catalogue table                        | staff  |
-| `/admin/categories`   | Category table                              | staff  |
-| `/admin/articles`     | Article table                               | staff  |
-| `/admin/reviews`      | Review table                                | staff  |
-| `/admin/comparisons`  | Comparison table                            | staff  |
-| `/admin/affiliate`    | Programs, commission terms                  | admin  |
+| `/admin/tools`        | Tool catalogue — create and edit            | staff  |
+| `/admin/categories`   | Category table (read-only)                  | staff  |
+| `/admin/articles`     | Articles — create and edit                  | staff  |
+| `/admin/reviews`      | Reviews — create and edit                   | staff  |
+| `/admin/comparisons`  | Comparisons — create and edit               | staff  |
+| `/admin/best`         | Best lists — create, order and edit         | staff  |
+| `/admin/authors`      | Author bylines — create and edit            | staff  |
+| `/admin/affiliate`    | Programs, commission terms — admin only     | admin  |
 | `/admin/media`        | Storage bucket overview                     | staff  |
 | `/admin/settings`     | Environment + site settings                 | admin  |
 | `/admin/login`        | Supabase Auth sign-in                       | public |
