@@ -8,8 +8,13 @@ import { requireStaff } from "@/lib/auth";
 import { getQueueSummary, listSourcesForAdmin, type AdminSourceRow } from "@/services/admin-ingest";
 import { dataMode } from "@/lib/supabase/config";
 import { formatDate } from "@/lib/utils/format";
+import { RunIngestButton } from "@/components/admin/run-ingest-button";
 
 export const metadata = { title: "Sources" };
+
+// The manual run fetches vendor pages inline, so the route needs longer than
+// the default. 60 is the ceiling on Vercel's smaller plans.
+export const maxDuration = 60;
 
 /** A fetch that has never run, versus one that ran and found nothing new. */
 function fetchLabel(source: AdminSourceRow): { text: string; tone: "primary" | "outline" | "warning" } {
@@ -124,6 +129,8 @@ export default async function AdminSourcesPage() {
             </Card>
           </div>
         ) : null}
+
+        {live ? <RunIngestButton /> : null}
 
         <AdminListToolbar
           count={rows.length}
