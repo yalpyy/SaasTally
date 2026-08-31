@@ -4,6 +4,7 @@ import {
   extractToolFacts,
   isExtractionConfigured,
   meetsPublishBar,
+  MODEL,
   PROMPT_VERSION,
   type ExtractedFacts,
 } from "./extract";
@@ -112,7 +113,7 @@ export async function extractAndApply(
     await supabase.from("extraction_runs").insert({
       source_id: source.id,
       tool_id: tool.id,
-      model: "claude-opus-5",
+      model: MODEL,
       prompt_version: PROMPT_VERSION,
       ok: false,
       note: result.error ?? "unknown error",
@@ -132,7 +133,7 @@ export async function extractAndApply(
     await supabase.from("extraction_runs").insert({
       source_id: source.id,
       tool_id: tool.id,
-      model: "claude-opus-5",
+      model: MODEL,
       prompt_version: PROMPT_VERSION,
       input_tokens: result.inputTokens,
       output_tokens: result.outputTokens,
@@ -177,7 +178,7 @@ export async function extractAndApply(
   await supabase.from("extraction_runs").insert({
     source_id: source.id,
     tool_id: tool.id,
-    model: "claude-opus-5",
+    model: MODEL,
     prompt_version: PROMPT_VERSION,
     input_tokens: result.inputTokens,
     output_tokens: result.outputTokens,

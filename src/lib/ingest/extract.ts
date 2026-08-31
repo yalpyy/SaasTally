@@ -18,7 +18,28 @@ import Anthropic from "@anthropic-ai/sdk";
 
 export const PROMPT_VERSION = "tool-facts-1";
 
-const MODEL = "claude-opus-5";
+/**
+ * Extraction is a mechanical read of a page into typed fields, which is what
+ * the cheapest model is good at — roughly 2.5 cents a tool rather than 13.
+ * Override with INGEST_MODEL if the quality does not hold on awkward pricing
+ * tables (per-seat tiers, annual discounts, regional currencies).
+ */
+export const MODEL = process.env.INGEST_MODEL ?? "claude-haiku-4-5";
+
+/**
+ * `output_config.effort` is rejected outright by Haiku 4.5 and Sonnet 4.5, so
+ * it is only sent for models that accept it. Getting this wrong is a 400 on
+ * every extraction, at night, with nobody watching.
+ */
+const EFFORT_MODELS = new Set([
+  "claude-opus-5",
+  "claude-opus-4-8",
+  "claude-opus-4-7",
+  "claude-opus-4-6",
+  "claude-sonnet-5",
+  "claude-sonnet-4-6",
+  "claude-fable-5",
+]);
 
 /** Enough of a pricing page to matter; the rest is footer and nav. */
 const MAX_INPUT_CHARS = 60_000;
@@ -124,8 +145,10 @@ export function isExtractionConfigured(): boolean {
 /**
  * Extract facts for one tool from one page.
  *
- * The system prompt and schema are identical on every call and come first, so
- * the cached prefix covers them and only the page text is billed at full rate.
+ * The system prompt is marked cacheable and comes first, but it is short
+ * enough that it may fall under the model's minimum cacheable prefix and
+ * simply not cache — which costs nothing and is why it is left in. The real
+ * saving is upstream: an unchanged page never reaches this function at all.
  */
 export async function extractToolFacts(
   toolName: string,
@@ -150,10 +173,9 @@ export async function extractToolFacts(
           cache_control: { type: "ephemeral" },
         },
       ],
-      output_config: {
-        effort: "low",
-        format: { type: "json_schema", schema: TOOL_SCHEMA },
-      },
+      output_config: EFFORT_MODELS.has(MODEL)
+        ? { effort: "low" as const, format: { type: "json_schema" as const, schema: TOOL_SCHEMA } }
+        : { format: { type: "json_schema" as const, schema: TOOL_SCHEMA } },
       messages: [
         {
           role: "user",
