@@ -27,10 +27,36 @@ export interface ImportState {
 
 export const initialImportState: ImportState = { status: "idle" };
 
+/**
+ * Import, with anything unexpected reported on screen.
+ *
+ * Every failure the action anticipates already returns a message. This catches
+ * the ones it does not — a missing column, a policy that rejects the write, a
+ * migration nobody ran — because the alternative is the generic error page and
+ * a reference number, which tells the person pasting fifty rows nothing at all.
+ */
 export async function importToolsAction(
-  _prevState: ImportState,
+  prevState: ImportState,
   formData: FormData,
 ): Promise<ImportState> {
+  try {
+    return await runImport(formData);
+  } catch (error) {
+    // redirect() and notFound() work by throwing; rethrow so they still work.
+    if (error && typeof error === "object" && "digest" in error) throw error;
+
+    const message = error instanceof Error ? error.message : "Unknown error";
+    const text = typeof formData.get("text") === "string" ? (formData.get("text") as string) : "";
+
+    return {
+      status: "error",
+      message: `Import failed: ${message}`,
+      text: text || prevState.text,
+    };
+  }
+}
+
+async function runImport(formData: FormData): Promise<ImportState> {
   await requireStaff();
 
   const text = typeof formData.get("text") === "string" ? (formData.get("text") as string) : "";
@@ -57,7 +83,11 @@ export async function importToolsAction(
     .select("id, slug");
 
   if (categoryError || !categoryRows) {
-    return { status: "error", message: "Could not load categories.", text };
+    return {
+      status: "error",
+      message: `Could not load categories: ${categoryError?.message ?? "no rows returned"}`,
+      text,
+    };
   }
 
   const categories = categoryRows as { id: string; slug: string }[];
@@ -140,7 +170,9 @@ export async function importToolsAction(
   if (insertError || !inserted) {
     return {
       status: "error",
-      message: "Could not create the tools. Check your permissions and try again.",
+      message: insertError
+        ? `Could not create the tools: ${insertError.message}`
+        : "Could not create the tools. Check your permissions and try again.",
       text,
     };
   }
@@ -156,28 +188,44 @@ export async function importToolsAction(
     });
   });
 
+  const warnings: string[] = [];
+
   if (links.length > 0) {
-    await supabase.from("tool_categories").insert(links);
+    const { error: linkError } = await supabase.from("tool_categories").insert(links);
+    if (linkError) warnings.push(`categories not linked (${linkError.message})`);
   }
 
-  // A pricing URL turns the tool into something the ingest pipeline can work
-  // on straight away, which is the point of asking for it during import.
+  /**
+   * Every imported tool gets a watched source, not just the ones with a
+   * pricing URL.
+   *
+   * Without this an import produced rows the pipeline had no way to reach:
+   * nothing to fetch, so nothing to describe, so nothing ever published. The
+   * homepage is enough to start from — it carries the vendor's own
+   * description, and the fetch handler follows its navigation to find the
+   * pricing page.
+   */
   const sources = fresh.flatMap((row) => {
     const toolId = idBySlug.get(row.slug);
-    if (!toolId || !row.pricingUrl) return [];
+    if (!toolId) return [];
+
     return [
-      {
-        tool_id: toolId,
-        url: row.pricingUrl,
-        kind: "vendor_pricing",
-      },
+      row.pricingUrl
+        ? { tool_id: toolId, url: row.pricingUrl, kind: "vendor_pricing" }
+        : { tool_id: toolId, url: row.websiteUrl, kind: "vendor_page" },
     ];
   });
 
   let sourcesQueued = 0;
   if (sources.length > 0) {
     const { error: sourceError } = await supabase.from("content_sources").insert(sources);
-    if (!sourceError) sourcesQueued = sources.length;
+    if (sourceError) {
+      // Most likely migration 0005 has not been run. The tools still exist, so
+      // say what is missing rather than failing the whole import.
+      warnings.push(`sources not registered (${sourceError.message})`);
+    } else {
+      sourcesQueued = sources.length;
+    }
   }
 
   revalidatePath("/admin/tools");
@@ -185,7 +233,9 @@ export async function importToolsAction(
 
   return {
     status: "done",
-    message: `Imported ${fresh.length} tool${fresh.length === 1 ? "" : "s"} as drafts.`,
+    message:
+      `Imported ${fresh.length} tool${fresh.length === 1 ? "" : "s"} as drafts.` +
+      (warnings.length > 0 ? ` Warnings: ${warnings.join("; ")}.` : ""),
     created: fresh.length,
     skipped,
     sourcesQueued,

@@ -34,8 +34,10 @@ export function ToolImportForm({ categorySlugs }: { categorySlugs: string[] }) {
           visible once someone has filled in what the page actually says.
         </p>
         <p className="mt-2">
-          A pricing URL is also registered as a watched source, so the scheduled run starts
-          collecting its facts without a second trip through the admin.
+          Every imported tool becomes a watched source — its pricing page when you give one, its
+          homepage otherwise. The scheduled run reads each vendor&apos;s own description from there
+          and follows their navigation to find the pricing page, so a URL you do not have is not a
+          URL you need to find.
         </p>
         <p className="mt-3 text-xs">
           Known categories:{" "}
@@ -52,11 +54,11 @@ export function ToolImportForm({ categorySlugs }: { categorySlugs: string[] }) {
             <p className="font-medium">{state.message}</p>
             {state.sourcesQueued ? (
               <p className="mt-1 text-muted">
-                {state.sourcesQueued} pricing page{state.sourcesQueued === 1 ? "" : "s"} added to{" "}
+                {state.sourcesQueued} page{state.sourcesQueued === 1 ? "" : "s"} now watched in{" "}
                 <Link href="/admin/sources" className="underline underline-offset-4">
                   Sources
                 </Link>
-                .
+                . The next scheduled run collects their details.
               </p>
             ) : null}
             {state.skipped && state.skipped.length > 0 ? (
