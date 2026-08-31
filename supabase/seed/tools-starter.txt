@@ -1,0 +1,88 @@
+# Starter catalogue — paste into /admin/tools/import
+#
+# Format: Name | website | categories | pricing URL (optional)
+#
+# No pricing URLs here on purpose. The pipeline finds each vendor's own pricing
+# page from their homepage navigation and registers it as a second source, so
+# guessing at those URLs would only be a chance to get them wrong.
+#
+# These are well-known products with stable domains, spread across the seeded
+# categories so no part of the site launches empty. They are a starting point,
+# not a ranking: nothing about the order here reaches a page.
+#
+# Imported tools arrive inactive. Each one publishes itself once the pipeline
+# has collected a real description for it.
+
+# --- SEO ---
+Semrush | https://www.semrush.com | seo,marketing
+Ahrefs | https://ahrefs.com | seo
+Moz | https://moz.com | seo
+Screaming Frog | https://www.screamingfrog.co.uk | seo,developer-tools
+
+# --- Analytics ---
+Mixpanel | https://mixpanel.com | analytics
+Amplitude | https://amplitude.com | analytics
+Hotjar | https://www.hotjar.com | analytics,design
+Plausible Analytics | https://plausible.io | analytics
+
+# --- CRM ---
+HubSpot | https://www.hubspot.com | crm,marketing
+Pipedrive | https://www.pipedrive.com | crm
+Salesforce | https://www.salesforce.com | crm
+Zoho CRM | https://www.zoho.com/crm | crm
+
+# --- Project management ---
+Asana | https://asana.com | project-management
+monday.com | https://monday.com | project-management
+ClickUp | https://clickup.com | project-management,productivity
+Trello | https://trello.com | project-management
+Linear | https://linear.app | project-management,developer-tools
+
+# --- Productivity ---
+Notion | https://www.notion.so | productivity,project-management
+Slack | https://slack.com | productivity
+Airtable | https://www.airtable.com | productivity,automation
+Todoist | https://www.todoist.com | productivity
+
+# --- Design ---
+Figma | https://www.figma.com | design
+Canva | https://www.canva.com | design,marketing
+
+# --- E-commerce ---
+Shopify | https://www.shopify.com | ecommerce
+BigCommerce | https://www.bigcommerce.com | ecommerce
+WooCommerce | https://woocommerce.com | ecommerce
+
+# --- Email marketing ---
+Mailchimp | https://mailchimp.com | email-marketing,marketing
+ActiveCampaign | https://www.activecampaign.com | email-marketing,marketing
+Klaviyo | https://www.klaviyo.com | email-marketing,ecommerce
+Brevo | https://www.brevo.com | email-marketing
+
+# --- Automation ---
+Zapier | https://zapier.com | automation
+Make | https://www.make.com | automation
+n8n | https://n8n.io | automation,developer-tools
+
+# --- Developer tools ---
+GitHub | https://github.com | developer-tools
+GitLab | https://about.gitlab.com | developer-tools
+Sentry | https://sentry.io | developer-tools
+Postman | https://www.postman.com | developer-tools
+
+# --- Hosting ---
+Hostinger | https://www.hostinger.com | hosting
+SiteGround | https://www.siteground.com | hosting
+Kinsta | https://kinsta.com | hosting
+Cloudways | https://www.cloudways.com | hosting
+Vercel | https://vercel.com | hosting,developer-tools
+
+# --- Security ---
+1Password | https://1password.com | security
+Bitwarden | https://bitwarden.com | security
+NordVPN | https://nordvpn.com | security
+
+# --- AI ---
+Jasper | https://www.jasper.ai | ai,marketing
+Perplexity | https://www.perplexity.ai | ai
+ElevenLabs | https://elevenlabs.io | ai

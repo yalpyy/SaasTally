@@ -8,6 +8,7 @@ import {
   PROMPT_VERSION,
   type ExtractedFacts,
 } from "./extract";
+import { factsFromMarkup } from "./metadata";
 import type { QueueClient } from "./queue";
 
 /**
@@ -21,6 +22,13 @@ import type { QueueClient } from "./queue";
  * Applying rather than proposing is a decision about what kind of value this
  * is. A price with a source and a timestamp is checkable, so it can go live;
  * anything that would read as a judgement is not produced here at all.
+ *
+ * There are two ways to get the facts. The page's own metadata — meta
+ * description, Open Graph tags, JSON-LD — costs nothing and is the vendor's
+ * own claim about their own product, so it is read first and always. A model
+ * is only worth calling on top of that, for the pricing table that markup
+ * cannot describe, and only when a key is configured. Running without one is
+ * a supported mode, not a degraded one.
  */
 
 export interface ApplyResult {
@@ -81,19 +89,33 @@ function factsToToolUpdate(
   return update;
 }
 
+/** Prefer a stated value over a missing one, field by field. */
+function mergeFacts(base: ExtractedFacts | null, extra: ExtractedFacts | null): ExtractedFacts | null {
+  if (!base) return extra;
+  if (!extra) return base;
+
+  return {
+    shortDescription: extra.shortDescription ?? base.shortDescription,
+    description: extra.description ?? base.description,
+    companyName: extra.companyName ?? base.companyName,
+    foundedYear: extra.foundedYear ?? base.foundedYear,
+    startingPrice: extra.startingPrice ?? base.startingPrice,
+    currency: extra.currency ?? base.currency,
+    pricingModel: extra.pricingModel ?? base.pricingModel,
+    tiers: extra.tiers.length > 0 ? extra.tiers : base.tiers,
+    features: extra.features.length > 0 ? extra.features : base.features,
+    missing: extra.missing ?? base.missing,
+  };
+}
+
 export async function extractAndApply(
   supabase: QueueClient,
   source: { id: string; url: string; tool_id: string | null },
   pageText: string,
+  pageHtml: string,
 ): Promise<ApplyResult> {
   if (!source.tool_id) {
     return { applied: false, published: false, detail: "source has no tool" };
-  }
-
-  if (!isExtractionConfigured()) {
-    // Not an error: phase 1 ran without a key and recording the change is
-    // still useful. Saying so beats a silent no-op.
-    return { applied: false, published: false, detail: "no ANTHROPIC_API_KEY, skipped extraction" };
   }
 
   const { data, error } = await supabase
@@ -107,22 +129,44 @@ export async function extractAndApply(
   }
 
   const tool = data as unknown as ToolRow;
-  const result = await extractToolFacts(tool.name, pageText, source.url);
 
-  if (!result.ok || !result.facts) {
-    await supabase.from("extraction_runs").insert({
-      source_id: source.id,
-      tool_id: tool.id,
-      model: MODEL,
-      prompt_version: PROMPT_VERSION,
-      ok: false,
-      note: result.error ?? "unknown error",
-    });
+  // Free first, and unconditionally: this is the vendor describing themselves.
+  const markupFacts = factsFromMarkup(pageHtml);
 
-    return { applied: false, published: false, detail: `extraction failed: ${result.error}` };
+  let modelFacts: ExtractedFacts | null = null;
+  let usedModel = false;
+  let inputTokens: number | undefined;
+  let outputTokens: number | undefined;
+
+  if (isExtractionConfigured()) {
+    const result = await extractToolFacts(tool.name, pageText, source.url);
+    usedModel = true;
+    inputTokens = result.inputTokens;
+    outputTokens = result.outputTokens;
+
+    if (result.ok && result.facts) {
+      modelFacts = result.facts;
+    } else {
+      await supabase.from("extraction_runs").insert({
+        source_id: source.id,
+        tool_id: tool.id,
+        model: MODEL,
+        prompt_version: PROMPT_VERSION,
+        ok: false,
+        note: result.error ?? "unknown error",
+      });
+    }
   }
 
-  const facts = result.facts;
+  const facts = mergeFacts(markupFacts, modelFacts);
+
+  if (!facts) {
+    return {
+      applied: false,
+      published: false,
+      detail: usedModel ? "nothing extracted" : "no metadata on page, and no API key",
+    };
+  }
 
   const { error: updateError } = await supabase
     .from("tools")
@@ -133,10 +177,10 @@ export async function extractAndApply(
     await supabase.from("extraction_runs").insert({
       source_id: source.id,
       tool_id: tool.id,
-      model: MODEL,
+      model: usedModel ? MODEL : "markup-only",
       prompt_version: PROMPT_VERSION,
-      input_tokens: result.inputTokens,
-      output_tokens: result.outputTokens,
+      input_tokens: inputTokens,
+      output_tokens: outputTokens,
       ok: true,
       applied: false,
       note: `update failed: ${updateError.message}`,
@@ -178,10 +222,10 @@ export async function extractAndApply(
   await supabase.from("extraction_runs").insert({
     source_id: source.id,
     tool_id: tool.id,
-    model: MODEL,
+    model: usedModel ? MODEL : "markup-only",
     prompt_version: PROMPT_VERSION,
-    input_tokens: result.inputTokens,
-    output_tokens: result.outputTokens,
+    input_tokens: inputTokens,
+    output_tokens: outputTokens,
     ok: true,
     applied: true,
     published,
