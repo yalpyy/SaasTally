@@ -12,30 +12,35 @@ export const metadata: Metadata = buildMetadata({
 
 const content = `## The short version
 
-SaaSTally may earn a commission when you purchase through selected links. This does not affect how products are evaluated.
+Some links on this site are affiliate links. If you buy through one, SaaSTally may earn a commission at no extra cost to you. That commission has no effect on what we recommend, how we score anything, or the order tools appear in.
 
-## How affiliate links work here
+## How an affiliate link works here
 
-Outbound links to partner products route through our own redirect endpoint. That endpoint records an anonymous, aggregate click event and forwards you to the vendor. We do not store IP addresses or build user profiles.
+Product buttons do not point at a partner URL. They point at our own redirect endpoint on this domain, which looks up the partner link on the server, records an anonymous click, and forwards you to the vendor.
 
-## What we record
+Recorded: which program was clicked, what kind of page it came from, where on the page the button was, a broad device type (mobile, tablet or desktop), and a country code when our host provides one.
 
-- Which affiliate program was clicked
-- The type of page the click came from
-- Broad device type
-- Country, where it is safely available
+Not recorded, by design: your IP address, your browser's user agent string, cookies, or any identifier that could be tied back to you. We do not build profiles, and we could not tell you which links any individual has clicked, because we never wrote it down.
 
-## Editorial independence
+## Why commission cannot reach the rankings
 
-Commission values live in a separate table from editorial scores. Ranking, ordering and scoring logic have no access to commission data. A product with no affiliate program can, and does, outrank one that pays.
+This is enforced by the database, not by good intentions. Commission rates live in a table only administrators can read. The code that orders listings, scores tools and builds shortlists has no access to it — a query for a commission value from that code returns nothing.
 
-## Labelling
+A tool with no affiliate program can outrank one that pays. Several on this site do.
 
-Affiliate links are labelled on the page they appear. Where a tool has an active partner program, the product card indicates it.
+## What is labelled
 
-## Questions
+- Tools with an active partner program are marked on their card and page.
+- Sponsored placements, if we ever run any, will say so plainly. We do not currently run any.
+- Pages whose details were collected automatically from a vendor's own site, and not yet checked by an editor, say so at the top and give the date and source.
 
-If you believe a page reads as promotional rather than editorial, tell us. That is a bug.`;
+## Pricing
+
+Prices are recorded from the vendor's own pages, with the date we read them. Vendors change prices without telling us. Confirm the current price with the vendor before you buy — the figure here is evidence of what was published on a date, not a quote.
+
+## If something reads wrong
+
+If a page reads like an advert rather than an assessment, that is a defect and we want to hear about it. Corrections are answered first.`;
 
 export default function Page() {
   return (
@@ -51,10 +56,6 @@ export default function Page() {
       <div className="mt-8">
         <Markdown content={content} />
       </div>
-      <p className="mt-12 border-t border-border pt-6 text-xs text-subtle">
-        This page contains professional placeholder content for phase 1. Have it reviewed by a
-        qualified professional before launch.
-      </p>
     </Container>
   );
 }

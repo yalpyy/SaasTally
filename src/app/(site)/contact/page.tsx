@@ -61,9 +61,16 @@ export default function ContactPage() {
 
       <Card className="mt-8 p-6">
         <h2 className="text-[15px] font-semibold">Email</h2>
-        <p className="mt-2 text-sm text-muted">
-          A contact form will be wired up once email infrastructure is connected. Until then, use the
-          address published on your deployed site.
+        <p className="mt-2 text-sm leading-relaxed text-muted">
+          Everything above reaches the same inbox:{" "}
+          <a
+            href="mailto:hello@saastally.com"
+            className="text-foreground underline underline-offset-4"
+          >
+            hello@saastally.com
+          </a>
+          . There is no contact form yet — a form that quietly discards messages would be worse than
+          an address.
         </p>
       </Card>
     </Container>

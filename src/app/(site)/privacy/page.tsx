@@ -10,33 +10,47 @@ export const metadata: Metadata = buildMetadata({
   path: "/privacy",
 });
 
-const content = `## Overview
+const content = `Last updated: 31 August 2026.
 
-This policy explains what SaaSTally collects and why. It is written to be readable rather than exhaustive.
+## The short version
 
-## What we collect
+SaaSTally has no reader accounts, runs no analytics or advertising trackers, and sets no cookies for visitors. We do not sell or share personal data, because we hold almost none.
 
-We aim to collect as little as possible. Currently that means aggregate affiliate click events (program, page type, broad device type and country where available) and standard server logs required to operate the site.
+## What we store when you click an affiliate link
 
-## What we do not collect
+Product buttons route through our own redirect. When you use one we write a single row containing: which affiliate program it was, what kind of page it came from, where on the page the button sat, a broad device type, and a country code when our host supplies one.
 
-We do not store raw IP addresses against click events, we do not sell data, and public visitors do not need an account.
+We deliberately do not store your IP address, your user agent string, or any identifier. Nothing in that row can be traced to a person, including by us.
 
 ## Cookies
 
-Affiliate networks may set their own cookies once you leave our site. Those cookies are controlled by the destination vendor, not by us.
+We set no cookies for readers. Your theme choice (light, dark or system) is kept in your browser's local storage and never leaves your device — clearing site data removes it.
 
-## Third parties
+Staff who sign in to the admin area receive a session cookie from our authentication provider. That applies only to people with an account, and there are no public accounts.
 
-Our infrastructure providers process data on our behalf in order to serve the site.
+## Newsletter
+
+The signup form is not connected to an email provider. Nothing you type into it is transmitted or stored anywhere. The form says so where it appears.
+
+## Server logs
+
+The site is hosted on Vercel and the database is Supabase. Both keep operational logs — request times, status codes, IP addresses — as any web host does, under their own retention policies. We use those only to keep the site running and to investigate faults.
+
+## Links to other sites
+
+Following a link to a vendor puts you on their site under their policy, not ours. We have no control over what they collect.
 
 ## Your rights
 
-Depending on where you live you may have rights to access or delete personal data we hold about you. Because we intentionally hold very little, most requests can be answered quickly.
+If you are in the UK, EU, Turkey or another jurisdiction with data protection rights, you may ask what we hold about you, ask for a copy, or ask us to delete it. Given the above, the honest answer will usually be that we hold nothing tied to you. Write to hello@saastally.com and we will answer.
 
 ## Changes
 
-We will update this page when our practices change and note the date of the change.`;
+If this policy changes materially we will update the date above rather than change it quietly.
+
+## Contact
+
+hello@saastally.com`;
 
 export default function Page() {
   return (
@@ -52,10 +66,6 @@ export default function Page() {
       <div className="mt-8">
         <Markdown content={content} />
       </div>
-      <p className="mt-12 border-t border-border pt-6 text-xs text-subtle">
-        This page contains professional placeholder content for phase 1. Have it reviewed by a
-        qualified professional before launch.
-      </p>
     </Container>
   );
 }
