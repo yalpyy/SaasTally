@@ -74,6 +74,14 @@ export interface Tool {
   verdict: string | null;
   /** True when an active affiliate program exists for this tool. */
   sponsored: boolean;
+  /**
+   * When the ingest pipeline last filled these facts in, and from where.
+   * Null means a person entered everything on this row.
+   */
+  factsCollectedAt: string | null;
+  factsSourceUrl: string | null;
+  /** False while nobody has checked what the pipeline collected. */
+  humanReviewed: boolean;
   seoTitle: string | null;
   seoDescription: string | null;
   updatedAt: string;

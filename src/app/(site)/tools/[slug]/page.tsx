@@ -10,6 +10,7 @@ import { ToolLogo } from "@/components/ui/tool-logo";
 import { ProsCons } from "@/components/ui/pros-cons";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { AffiliateDisclosure } from "@/components/ui/affiliate-disclosure";
+import { CollectionNotice } from "@/components/tools/collection-notice";
 import { ToolCard } from "@/components/tools/tool-card";
 import { ArticleCard } from "@/components/articles/article-card";
 import { getToolBySlug, getToolSlugs, getToolsBySlugs } from "@/services/tools";
@@ -203,6 +204,7 @@ export default async function ToolPage({ params }: { params: Promise<{ slug: str
                 Overview
               </h2>
               <p className="mt-4 text-[15px] leading-relaxed text-muted">{tool.description}</p>
+              <CollectionNotice tool={tool} className="mt-6" />
               <AffiliateDisclosure variant="panel" className="mt-6" />
             </section>
 

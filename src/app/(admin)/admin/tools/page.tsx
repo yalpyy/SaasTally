@@ -28,6 +28,7 @@ export default async function AdminToolsPage() {
         startingPrice: tool.startingPrice,
         featured: tool.featured,
         active: tool.active,
+        humanReviewed: tool.humanReviewed,
         categorySlugs: tool.categorySlugs,
         updatedAt: tool.updatedAt,
       }));
@@ -66,6 +67,7 @@ export default async function AdminToolsPage() {
       render: (tool) => (
         <span className="flex flex-wrap justify-end gap-1.5 md:justify-start">
           {tool.featured ? <Badge tone="primary">Featured</Badge> : null}
+          {tool.humanReviewed ? null : <Badge tone="warning">Unreviewed</Badge>}
           <Badge tone={tool.active ? "neutral" : "warning"}>
             {tool.active ? "Active" : "Hidden"}
           </Badge>

@@ -1,16 +1,16 @@
 import "server-only";
 
 import { fetchSource } from "./fetcher";
+import { extractAndApply } from "./apply";
 import type { IngestJob, QueueClient } from "./queue";
 
 /**
  * Job handlers.
  *
- * Phase 1 has exactly one: fetch a source and record what changed. The
- * extraction handlers land in phase 2 and will read from what this writes —
- * which is the reason this phase exists on its own. If the pipeline cannot
- * reliably tell "changed" from "unchanged", nothing built on top of it can be
- * trusted either, and every mistake would cost model spend to discover.
+ * There is one: fetch a source, and when the page has changed, read facts out
+ * of it before the text is discarded. Extraction runs here rather than as its
+ * own queued job precisely so the vendor's page never has to be stored —
+ * we hash it, extract from it, and drop it.
  */
 
 export interface HandlerResult {
@@ -21,6 +21,7 @@ export interface HandlerResult {
 interface SourceRow {
   id: string;
   url: string;
+  tool_id: string | null;
   refresh_hours: number;
   content_hash: string | null;
   etag: string | null;
@@ -45,7 +46,7 @@ export async function handleFetchSource(
 
   const { data, error } = await supabase
     .from("content_sources")
-    .select("id, url, refresh_hours, content_hash, etag, last_modified")
+    .select("id, url, tool_id, refresh_hours, content_hash, etag, last_modified")
     .eq("id", sourceId)
     .maybeSingle();
 
@@ -78,9 +79,11 @@ export async function handleFetchSource(
         })
         .eq("id", source.id);
 
-      // Phase 2 queues extract_facts here. Until then a change is recorded and
-      // nothing acts on it — which is the point of shipping this half first.
-      return { ok: true, detail: `changed (${outcome.bytes} bytes)` };
+      // The text is still in memory here and nowhere else. Extraction has to
+      // happen now or not at all.
+      const applied = await extractAndApply(supabase, source, outcome.text);
+
+      return { ok: true, detail: `changed (${outcome.bytes} bytes) — ${applied.detail}` };
     }
 
     case "unchanged": {
@@ -136,10 +139,10 @@ export async function runJob(supabase: QueueClient, job: IngestJob): Promise<Han
     case "fetch_source":
       return handleFetchSource(supabase, job);
 
-    // Queued only from phase 2 onward; a job of this kind today means someone
-    // inserted it by hand, and failing loudly beats pretending it ran.
+    // Extraction runs inside fetch_source, so a job of either kind means
+    // someone inserted it by hand. Failing loudly beats pretending it ran.
     case "extract_facts":
     case "snapshot_price":
-      return { ok: false, detail: `Handler for ${job.kind} is not implemented yet` };
+      return { ok: false, detail: `${job.kind} is handled inside fetch_source` };
   }
 }
