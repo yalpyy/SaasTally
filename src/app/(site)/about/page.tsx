@@ -12,26 +12,37 @@ export const metadata: Metadata = buildMetadata({
 
 const content = `## What SaaSTally is
 
-SaaSTally is an independent software discovery platform. We research tools, compare them against stated criteria, and publish shortlists that teams can act on.
+An independent catalogue of business software. We collect what each product does and what it costs, keep those figures current, and publish comparisons and shortlists on top of them.
 
-## Why we exist
+## Why it exists
 
-Buying software is high-friction and low-information. Vendor sites market, review sites rank by commission, and forums are anecdote. We try to sit in the useful middle: structured data, transparent criteria and plain conclusions.
+Choosing software is a decision made with bad information. Vendor sites market. Many comparison sites rank by whoever pays most. Forums give you one person's experience with a setup unlike yours.
+
+We try to be useful in between: the facts, sourced and dated, and conclusions that state their reasoning.
+
+## How the catalogue is built
+
+Product details — description, pricing, plan names — are collected automatically from each vendor's own website, and re-checked on a schedule so they do not go stale. Every figure carries the page it came from and the date it was read.
+
+Pages built this way say so at the top until an editor has been through them. They carry no score, because a score is a judgement and nothing here invents one.
+
+Reviews, rankings and verdicts are written by people. They are never machine-generated, and no page claims hands-on testing unless someone actually tested the product.
 
 ## How we make money
 
-Some outbound links are affiliate links. When you buy through one, we may earn a commission at no additional cost to you. Commission rates are stored separately from editorial scoring and are never an input to rankings.
+Some outbound links are affiliate links, and we may earn a commission when you buy through one. Commission data is stored where the ranking code cannot read it, which is a database permission rather than a promise. Our affiliate disclosure explains it in full.
 
-## Our standard
+## What we hold ourselves to
 
-- We state the criteria before the conclusion.
-- We say when we have not used a product ourselves.
-- We publish who a tool is not for, not only who it is for.
-- We update pages when pricing or positioning changes materially.
+- State the criteria before the conclusion.
+- Never claim testing that did not happen.
+- Say who a tool is not for, not only who it suits.
+- Show where a figure came from and when.
+- Correct mistakes quickly and visibly.
 
 ## Contact
 
-Corrections, questions and vendor enquiries are welcome via our contact page.`;
+Corrections, vendor updates and questions: hello@saastally.com`;
 
 export default function Page() {
   return (
@@ -47,10 +58,6 @@ export default function Page() {
       <div className="mt-8">
         <Markdown content={content} />
       </div>
-      <p className="mt-12 border-t border-border pt-6 text-xs text-subtle">
-        This page contains professional placeholder content for phase 1. Have it reviewed by a
-        qualified professional before launch.
-      </p>
     </Container>
   );
 }

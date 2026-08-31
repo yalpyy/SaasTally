@@ -10,33 +10,45 @@ export const metadata: Metadata = buildMetadata({
   path: "/terms",
 });
 
-const content = `## Acceptance
+const content = `Last updated: 31 August 2026.
 
-By using SaaSTally you agree to these terms.
+## Using this site
 
-## Editorial content
+SaaSTally is free to read and needs no account. By using it you accept these terms.
 
-Content is provided for general information. Pricing, features and vendor policies change frequently — always confirm details with the vendor before purchasing.
+## What the information here is, and is not
 
-## No warranty
+We publish product details, prices and comparisons to help you shortlist software. It is research, not advice. We are not your consultant and we do not know your circumstances — the decision, and the responsibility for it, stays with you.
 
-SaaSTally is provided as is. We make no warranty that the information is complete, current or fit for a particular purpose.
+Prices and features are recorded from vendors' own pages on the date shown. Vendors change both without notice. Always confirm with the vendor before purchasing.
 
-## Limitation of liability
+Some pages are marked as collected automatically and not yet reviewed by an editor. Those labels are accurate; treat those pages as a starting point rather than a verified account.
 
-To the extent permitted by law, SaaSTally is not liable for losses arising from decisions made on the basis of content published here.
+## Affiliate links
 
-## Intellectual property
+Some outbound links earn us a commission. This is set out in full on our affiliate disclosure page and does not affect rankings or scores.
 
-Product names and logos belong to their respective owners. Editorial text and original assets on this site belong to SaaSTally.
+## Accuracy and corrections
 
-## Affiliate relationships
+We try to be right and we will correct mistakes. We do not warrant that everything here is accurate, complete or current, and to the extent the law allows we are not liable for losses arising from decisions made on the basis of this site.
 
-Some links are affiliate links. See our affiliate disclosure for detail.
+## Other people's sites
+
+Links to vendors are for convenience. We do not control those sites and are not responsible for their content, terms or pricing.
+
+## Our content
+
+The words, design and structure of this site belong to us. Quote us with attribution and a link; do not republish pages wholesale or scrape the catalogue for a competing product.
+
+Product names, logos and trademarks belong to their owners and appear here for identification.
 
 ## Changes
 
-We may update these terms. Continued use after an update constitutes acceptance.`;
+We may update these terms. Material changes move the date above.
+
+## Contact
+
+hello@saastally.com`;
 
 export default function Page() {
   return (
@@ -52,10 +64,6 @@ export default function Page() {
       <div className="mt-8">
         <Markdown content={content} />
       </div>
-      <p className="mt-12 border-t border-border pt-6 text-xs text-subtle">
-        This page contains professional placeholder content for phase 1. Have it reviewed by a
-        qualified professional before launch.
-      </p>
     </Container>
   );
 }
