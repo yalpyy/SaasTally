@@ -1,6 +1,10 @@
 import { z } from "zod";
 import { scoreField } from "./common";
 
+// Re-exported so the tool form keeps its existing import while there is only
+// one implementation to keep correct.
+export { suggestSlug } from "./common";
+
 /**
  * Input validation for the tool editor.
  *
@@ -108,12 +112,3 @@ export const toolInputSchema = z.object({
 });
 
 export type ToolInput = z.infer<typeof toolInputSchema>;
-
-/** Suggest a slug from a name, so editors rarely have to type one. */
-export function suggestSlug(name: string): string {
-  return name
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
-}

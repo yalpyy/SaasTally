@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Pencil, Plus } from "lucide-react";
+import { Pencil, Plus, Upload } from "lucide-react";
 import { AdminHeader } from "@/components/admin/admin-header";
 import { ModeBanner } from "@/components/admin/mode-banner";
 import { DataTable, type Column } from "@/components/admin/data-table";
@@ -107,6 +107,18 @@ export default async function AdminToolsPage() {
             {rows.length} tool{rows.length === 1 ? "" : "s"}
           </p>
 
+          <div className="flex flex-wrap items-center gap-3">
+
+          {live ? (
+            <Link
+              href="/admin/tools/import"
+              className="inline-flex h-10 items-center gap-2 rounded-xl border border-border px-4 text-sm font-medium transition-colors hover:bg-card-hover"
+            >
+              <Upload className="size-4" aria-hidden="true" />
+              Import
+            </Link>
+          ) : null}
+
           {live ? (
             <Link
               href="/admin/tools/new"
@@ -124,6 +136,7 @@ export default async function AdminToolsPage() {
               New tool
             </span>
           )}
+          </div>
         </div>
 
         <DataTable

@@ -86,11 +86,13 @@ be imported into a Client Component. `src/lib/supabase/server.ts` is marked
 1. Create a project at [supabase.com](https://supabase.com).
 2. Run the migrations in `supabase/migrations/` in order (SQL editor, or
    `npx supabase db push`).
-3. Copy the project URL and publishable key into `.env.local`.
-4. Create a staff user in **Authentication → Users**, then insert the matching
+3. Run `supabase/seed/0001_categories.sql`. Every tool needs at least one
+   category, so with that table empty the admin cannot create anything.
+4. Copy the project URL and publishable key into `.env.local`.
+5. Create a staff user in **Authentication → Users**, then insert the matching
    profile row (see `supabase/migrations/README.md`). Without a `profiles` row a
    signed-in user is *not* staff and cannot reach `/admin`.
-5. Storage buckets (`tool-logos`, `tool-screenshots`, `article-images`,
+6. Storage buckets (`tool-logos`, `tool-screenshots`, `article-images`,
    `authors`, `site-assets`) are created by the migration with public read and
    staff-only write.
 
@@ -201,7 +203,7 @@ is not comparing fifths to tenths.
 | Route                 | Purpose                                     | Access |
 | --------------------- | ------------------------------------------- | ------ |
 | `/admin`              | Dashboard: counts, recent content           | staff  |
-| `/admin/tools`        | Tool catalogue — create and edit            | staff  |
+| `/admin/tools`        | Tool catalogue — create, edit and import    | staff  |
 | `/admin/categories`   | Category table (read-only)                  | staff  |
 | `/admin/articles`     | Articles — create and edit                  | staff  |
 | `/admin/reviews`      | Reviews — create and edit                   | staff  |
