@@ -18,6 +18,9 @@ export interface CategoryRow {
 }
 
 export interface ToolRow {
+  facts_collected_at?: string | null;
+  facts_source_url?: string | null;
+  human_reviewed?: boolean;
   id: string;
   name: string;
   slug: string;

@@ -118,6 +118,7 @@ export interface AdminToolRow {
   startingPrice: string | null;
   featured: boolean;
   active: boolean;
+  humanReviewed: boolean;
   categorySlugs: string[];
   updatedAt: string;
 }
@@ -128,7 +129,9 @@ export async function listToolsForAdmin(): Promise<AdminToolRow[] | null> {
 
   const { data, error } = await supabase
     .from("tools")
-    .select("id, name, slug, rating, starting_price, featured, active, updated_at, tool_categories(categories(slug))")
+    .select(
+      "id, name, slug, rating, starting_price, featured, active, human_reviewed, updated_at, tool_categories(categories(slug))",
+    )
     .order("updated_at", { ascending: false });
 
   if (error || !data) return null;
@@ -142,6 +145,7 @@ export async function listToolsForAdmin(): Promise<AdminToolRow[] | null> {
       starting_price: string | null;
       featured: boolean;
       active: boolean;
+      human_reviewed: boolean | null;
       updated_at: string;
       tool_categories: { categories: { slug: string } | null }[] | null;
     }[]
@@ -153,6 +157,7 @@ export async function listToolsForAdmin(): Promise<AdminToolRow[] | null> {
     startingPrice: row.starting_price,
     featured: row.featured,
     active: row.active,
+    humanReviewed: row.human_reviewed ?? true,
     updatedAt: row.updated_at,
     categorySlugs: (row.tool_categories ?? [])
       .map((link) => link.categories?.slug)

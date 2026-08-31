@@ -74,6 +74,9 @@ function toRow(input: ToolInput) {
     seo_description: input.seoDescription,
     featured: input.featured,
     active: input.active,
+    // Saving through the editor is what "reviewed" means: it clears the notice
+    // on the public page and stops the pipeline from rewriting the prose.
+    human_reviewed: true,
   };
 }
 
