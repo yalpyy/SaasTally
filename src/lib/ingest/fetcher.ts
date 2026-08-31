@@ -197,8 +197,21 @@ export function hashText(text: string): string {
 /* ------------------------------------------------------------------------- */
 
 export type FetchOutcome =
-  /** The page was fetched and its text differs from what we last saw. */
-  | { kind: "changed"; status: number; text: string; hash: string; bytes: number; etag: string | null; lastModified: string | null }
+  /**
+   * The page was fetched and its text differs from what we last saw. Both the
+   * flattened text and the raw markup come back: the text is what a model
+   * reads, the markup is where the vendor's own meta tags and JSON-LD live.
+   */
+  | {
+      kind: "changed";
+      status: number;
+      text: string;
+      html: string;
+      hash: string;
+      bytes: number;
+      etag: string | null;
+      lastModified: string | null;
+    }
   /** Fetched, but the text hashes to what we already have. */
   | { kind: "unchanged"; status: number; etag: string | null; lastModified: string | null }
   /** robots.txt says not to. */
@@ -288,6 +301,7 @@ export async function fetchSource(url: string, options: FetchOptions = {}): Prom
     kind: "changed",
     status: response.status,
     text,
+    html,
     hash,
     bytes: html.length,
     etag,

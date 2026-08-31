@@ -2,6 +2,7 @@ import "server-only";
 
 import { fetchSource } from "./fetcher";
 import { extractAndApply } from "./apply";
+import { findPricingLink } from "./metadata";
 import type { IngestJob, QueueClient } from "./queue";
 
 /**
@@ -21,6 +22,7 @@ export interface HandlerResult {
 interface SourceRow {
   id: string;
   url: string;
+  kind: string;
   tool_id: string | null;
   refresh_hours: number;
   content_hash: string | null;
@@ -46,7 +48,7 @@ export async function handleFetchSource(
 
   const { data, error } = await supabase
     .from("content_sources")
-    .select("id, url, tool_id, refresh_hours, content_hash, etag, last_modified")
+    .select("id, url, kind, tool_id, refresh_hours, content_hash, etag, last_modified")
     .eq("id", sourceId)
     .maybeSingle();
 
@@ -79,11 +81,16 @@ export async function handleFetchSource(
         })
         .eq("id", source.id);
 
-      // The text is still in memory here and nowhere else. Extraction has to
+      // The page is still in memory here and nowhere else. Extraction has to
       // happen now or not at all.
-      const applied = await extractAndApply(supabase, source, outcome.text);
+      const applied = await extractAndApply(supabase, source, outcome.text, outcome.html);
 
-      return { ok: true, detail: `changed (${outcome.bytes} bytes) — ${applied.detail}` };
+      const discovered = await discoverPricingSource(supabase, source, outcome.html);
+
+      return {
+        ok: true,
+        detail: `changed (${outcome.bytes} bytes) — ${applied.detail}${discovered ? ", found pricing page" : ""}`,
+      };
     }
 
     case "unchanged": {
@@ -132,6 +139,33 @@ export async function handleFetchSource(
       return { ok: false, detail: outcome.reason };
     }
   }
+}
+
+/**
+ * Register the vendor's own pricing page as a second source.
+ *
+ * Saves anyone having to find and paste it: almost every SaaS site links
+ * pricing from its header, and that page is where the figures this catalogue
+ * cares about actually live. Only from a homepage, and only once — the unique
+ * index on url makes a repeat insert a no-op rather than a duplicate.
+ */
+async function discoverPricingSource(
+  supabase: QueueClient,
+  source: SourceRow,
+  html: string,
+): Promise<boolean> {
+  if (source.kind !== "vendor_page" || !source.tool_id) return false;
+
+  const pricingUrl = findPricingLink(html, source.url);
+  if (!pricingUrl || pricingUrl === source.url) return false;
+
+  const { error } = await supabase.from("content_sources").insert({
+    tool_id: source.tool_id,
+    url: pricingUrl,
+    kind: "vendor_pricing",
+  });
+
+  return !error;
 }
 
 export async function runJob(supabase: QueueClient, job: IngestJob): Promise<HandlerResult> {

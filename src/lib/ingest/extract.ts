@@ -213,12 +213,16 @@ export async function extractToolFacts(
 /**
  * Is there enough here to show a reader?
  *
- * The bar for publishing a page nobody has reviewed: it has to say what the
- * product does and what it costs. A page with a name and a link is not a
- * catalogue entry, it is a stub with our name on it.
+ * The bar is a real description of what the product does. A page with a name
+ * and a link is a stub with our name on it; a page with the vendor's own
+ * summary, category and link is a thin but honest catalogue entry.
+ *
+ * Pricing was originally part of this bar and is not any more. Reading a
+ * pricing table needs a model, and gating publication on that would mean a
+ * catalogue that stays empty for anyone not paying for one — while the pages
+ * it refused to publish were perfectly truthful. A tool whose price we could
+ * not determine shows no price, which is the accurate thing to show.
  */
 export function meetsPublishBar(facts: ExtractedFacts): boolean {
-  const hasDescription = Boolean(facts.shortDescription && facts.shortDescription.length >= 20);
-  const hasPricing = Boolean(facts.startingPrice) || facts.tiers.length > 0;
-  return hasDescription && hasPricing;
+  return Boolean(facts.shortDescription && facts.shortDescription.trim().length >= 20);
 }
