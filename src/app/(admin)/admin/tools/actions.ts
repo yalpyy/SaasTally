@@ -6,16 +6,15 @@ import { requireStaff } from "@/lib/auth";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { toolInputSchema, type ToolInput } from "@/lib/validation/tool";
+import type { AdminFormState } from "@/lib/admin/form-types";
 
-export interface ToolFormState {
-  status: "idle" | "error";
-  message?: string;
-  fieldErrors?: Record<string, string[]>;
-  /** Echoed back so a failed submit does not wipe what the editor typed. */
-  values?: Record<string, string | string[] | boolean>;
-}
-
-export const initialToolFormState: ToolFormState = { status: "idle" };
+/**
+ * A "use server" file may only export async functions, so the state shape is a
+ * type alias (erased at compile time) and the initial value lives in
+ * `lib/admin/form-types`. Exporting the constant from here made the module
+ * throw on load and took the whole page down with it.
+ */
+export type ToolFormState = AdminFormState;
 
 function text(formData: FormData, key: string): string {
   const value = formData.get(key);

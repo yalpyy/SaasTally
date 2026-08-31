@@ -4,9 +4,9 @@ import { useActionState, useState } from "react";
 import {
   createToolAction,
   updateToolAction,
-  initialToolFormState,
   type ToolFormState,
 } from "@/app/(admin)/admin/tools/actions";
+import { initialAdminFormState } from "@/lib/admin/form-types";
 import { pricingModels, suggestSlug } from "@/lib/validation/tool";
 import {
   Field,
@@ -67,7 +67,7 @@ export function ToolForm({
 
   const [state, formAction, isPending] = useActionState<ToolFormState, FormData>(
     isEdit ? updateToolAction : createToolAction,
-    initialToolFormState,
+    initialAdminFormState,
   );
 
   // Name and slug are controlled so the slug can follow the name. React keeps

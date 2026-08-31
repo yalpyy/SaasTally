@@ -5,10 +5,11 @@
   "description": "SaaSTally - Compare software. Choose smarter.",
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "node scripts/check-server-actions.mjs && next build",
     "start": "next start",
     "lint": "next lint",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "check:actions": "node scripts/check-server-actions.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.122.0",

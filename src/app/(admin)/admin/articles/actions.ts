@@ -8,7 +8,6 @@ import {
   duplicateSlugFailure,
   saveFailure,
   UNIQUE_VIOLATION,
-  initialAdminFormState,
   type AdminFormState,
 } from "@/lib/admin/form-state";
 import {
@@ -18,7 +17,6 @@ import {
 } from "@/lib/validation/article";
 
 export type ArticleFormState = AdminFormState;
-export const initialArticleFormState = initialAdminFormState;
 
 function readForm(formData: FormData) {
   return {

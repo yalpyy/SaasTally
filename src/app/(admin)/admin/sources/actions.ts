@@ -8,7 +8,6 @@ import {
   checkbox,
   saveFailure,
   UNIQUE_VIOLATION,
-  initialAdminFormState,
   type AdminFormState,
 } from "@/lib/admin/form-state";
 import {
@@ -17,7 +16,6 @@ import {
 } from "@/lib/validation/content-source";
 
 export type SourceFormState = AdminFormState;
-export const initialSourceFormState = initialAdminFormState;
 
 function readForm(formData: FormData) {
   return {

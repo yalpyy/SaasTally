@@ -8,13 +8,11 @@ import {
   duplicateSlugFailure,
   saveFailure,
   UNIQUE_VIOLATION,
-  initialAdminFormState,
   type AdminFormState,
 } from "@/lib/admin/form-state";
 import { comparisonInputSchema, type ComparisonInput } from "@/lib/validation/comparison";
 
 export type ComparisonFormState = AdminFormState;
-export const initialComparisonFormState = initialAdminFormState;
 
 function readForm(formData: FormData) {
   return {

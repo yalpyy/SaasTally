@@ -4,7 +4,8 @@ import { revalidatePath } from "next/cache";
 import { requireStaff } from "@/lib/auth";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
-import { parseToolImport, type ImportLineError } from "@/lib/validation/tool-import";
+import { parseToolImport } from "@/lib/validation/tool-import";
+import type { ImportState } from "./state";
 
 /**
  * Bulk import.
@@ -13,19 +14,10 @@ import { parseToolImport, type ImportLineError } from "@/lib/validation/tool-imp
  * reports field errors, while this one reports per-line problems across many.
  * The authorisation and connection steps are the same, though — a Server
  * Action is a public endpoint whatever it does.
+ *
+ * The state type and its initial value live in `./state`, because this file is
+ * `"use server"` and may only export async functions.
  */
-export interface ImportState {
-  status: "idle" | "error" | "done";
-  message?: string;
-  /** Kept so a failed paste is still in the textarea to fix. */
-  text?: string;
-  lineErrors?: ImportLineError[];
-  created?: number;
-  skipped?: string[];
-  sourcesQueued?: number;
-}
-
-export const initialImportState: ImportState = { status: "idle" };
 
 /**
  * Import, with anything unexpected reported on screen.

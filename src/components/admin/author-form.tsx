@@ -4,9 +4,9 @@ import { useActionState } from "react";
 import {
   createAuthorAction,
   updateAuthorAction,
-  initialAuthorFormState,
   type AuthorFormState,
 } from "@/app/(admin)/admin/authors/actions";
+import { initialAdminFormState } from "@/lib/admin/form-types";
 import {
   Field,
   Fieldset,
@@ -33,7 +33,7 @@ export function AuthorForm({ author }: { author?: AuthorFormValues }) {
 
   const [state, formAction, isPending] = useActionState<AuthorFormState, FormData>(
     isEdit ? updateAuthorAction : createAuthorAction,
-    initialAuthorFormState,
+    initialAdminFormState,
   );
 
   const errors = state.fieldErrors ?? {};

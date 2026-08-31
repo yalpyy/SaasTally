@@ -4,9 +4,9 @@ import { useActionState } from "react";
 import {
   createComparisonAction,
   updateComparisonAction,
-  initialComparisonFormState,
   type ComparisonFormState,
 } from "@/app/(admin)/admin/comparisons/actions";
+import { initialAdminFormState } from "@/lib/admin/form-types";
 import {
   Field,
   Fieldset,
@@ -53,7 +53,7 @@ export function ComparisonForm({
 
   const [state, formAction, isPending] = useActionState<ComparisonFormState, FormData>(
     isEdit ? updateComparisonAction : createComparisonAction,
-    initialComparisonFormState,
+    initialAdminFormState,
   );
 
   const errors = state.fieldErrors ?? {};

@@ -8,14 +8,12 @@ import {
   duplicateSlugFailure,
   saveFailure,
   UNIQUE_VIOLATION,
-  initialAdminFormState,
   type AdminFormState,
   type SupabaseClient,
 } from "@/lib/admin/form-state";
 import { bestListInputSchema, type BestListInput } from "@/lib/validation/best-list";
 
 export type BestListFormState = AdminFormState;
-export const initialBestListFormState = initialAdminFormState;
 
 function readForm(formData: FormData) {
   return {
