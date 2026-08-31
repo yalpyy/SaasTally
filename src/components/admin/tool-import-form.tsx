@@ -3,11 +3,8 @@
 import { useActionState } from "react";
 import Link from "next/link";
 import { AlertTriangle, CheckCircle2, Loader2 } from "lucide-react";
-import {
-  importToolsAction,
-  initialImportState,
-  type ImportState,
-} from "@/app/(admin)/admin/tools/import/actions";
+import { importToolsAction } from "@/app/(admin)/admin/tools/import/actions";
+import { initialImportState, type ImportState } from "@/app/(admin)/admin/tools/import/state";
 import { Card } from "@/components/ui/card";
 import { Field, Fieldset, FormError, inputClass } from "@/components/admin/form-primitives";
 

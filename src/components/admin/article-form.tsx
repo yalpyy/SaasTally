@@ -4,9 +4,9 @@ import { useActionState } from "react";
 import {
   createArticleAction,
   updateArticleAction,
-  initialArticleFormState,
   type ArticleFormState,
 } from "@/app/(admin)/admin/articles/actions";
+import { initialAdminFormState } from "@/lib/admin/form-types";
 import {
   Field,
   Fieldset,
@@ -55,7 +55,7 @@ export function ArticleForm({
 
   const [state, formAction, isPending] = useActionState<ArticleFormState, FormData>(
     isEdit ? updateArticleAction : createArticleAction,
-    initialArticleFormState,
+    initialAdminFormState,
   );
 
   const errors = state.fieldErrors ?? {};

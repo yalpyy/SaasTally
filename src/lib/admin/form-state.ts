@@ -5,6 +5,7 @@ import { requireStaff } from "@/lib/auth";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import type { StaffRole } from "@/types";
+import type { AdminFormState } from "./form-types";
 
 /**
  * Shared shape for every admin editor.
@@ -13,15 +14,7 @@ import type { StaffRole } from "@/types";
  * five content types from drifting into five slightly different ideas of what
  * a failed submit looks like.
  */
-export interface AdminFormState {
-  status: "idle" | "error";
-  message?: string;
-  fieldErrors?: Record<string, string[]>;
-  /** Echoed back so a failed submit does not wipe what the editor typed. */
-  values?: Record<string, string | string[] | boolean>;
-}
-
-export const initialAdminFormState: AdminFormState = { status: "idle" };
+export type { AdminFormState } from "./form-types";
 
 /* ------------------------------------------------------------------------- */
 /* FormData readers                                                          */

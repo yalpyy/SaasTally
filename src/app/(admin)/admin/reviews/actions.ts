@@ -8,13 +8,11 @@ import {
   duplicateSlugFailure,
   saveFailure,
   UNIQUE_VIOLATION,
-  initialAdminFormState,
   type AdminFormState,
 } from "@/lib/admin/form-state";
 import { reviewInputSchema, type ReviewInput } from "@/lib/validation/review";
 
 export type ReviewFormState = AdminFormState;
-export const initialReviewFormState = initialAdminFormState;
 
 function readForm(formData: FormData) {
   return {

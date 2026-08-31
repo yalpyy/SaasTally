@@ -4,9 +4,9 @@ import { useActionState } from "react";
 import {
   createReviewAction,
   updateReviewAction,
-  initialReviewFormState,
   type ReviewFormState,
 } from "@/app/(admin)/admin/reviews/actions";
+import { initialAdminFormState } from "@/lib/admin/form-types";
 import {
   Field,
   Fieldset,
@@ -62,7 +62,7 @@ export function ReviewForm({
 
   const [state, formAction, isPending] = useActionState<ReviewFormState, FormData>(
     isEdit ? updateReviewAction : createReviewAction,
-    initialReviewFormState,
+    initialAdminFormState,
   );
 
   const errors = state.fieldErrors ?? {};

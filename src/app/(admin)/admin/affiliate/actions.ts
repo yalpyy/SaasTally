@@ -9,16 +9,10 @@ import {
   affiliateProgramInputSchema,
   type AffiliateProgramInput,
 } from "@/lib/validation/affiliate-program";
+import type { AdminFormState } from "@/lib/admin/form-types";
 
-export interface ProgramFormState {
-  status: "idle" | "error";
-  message?: string;
-  fieldErrors?: Record<string, string[]>;
-  /** Echoed back so a failed submit does not wipe what the admin typed. */
-  values?: Record<string, string | string[] | boolean>;
-}
-
-export const initialProgramFormState: ProgramFormState = { status: "idle" };
+/** Type only: a "use server" file may not export the constant. */
+export type ProgramFormState = AdminFormState;
 
 function text(formData: FormData, key: string): string {
   const value = formData.get(key);

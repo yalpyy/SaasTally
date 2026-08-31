@@ -4,9 +4,9 @@ import { useActionState } from "react";
 import {
   createProgramAction,
   updateProgramAction,
-  initialProgramFormState,
   type ProgramFormState,
 } from "@/app/(admin)/admin/affiliate/actions";
+import { initialAdminFormState } from "@/lib/admin/form-types";
 import { commissionTypes, affiliateStatuses } from "@/lib/validation/affiliate-program";
 import { Field, Fieldset, FormError, SubmitRow, inputClass } from "@/components/admin/form-primitives";
 
@@ -56,7 +56,7 @@ export function AffiliateProgramForm({
 
   const [state, formAction, isPending] = useActionState<ProgramFormState, FormData>(
     isEdit ? updateProgramAction : createProgramAction,
-    initialProgramFormState,
+    initialAdminFormState,
   );
 
   const errors = state.fieldErrors ?? {};

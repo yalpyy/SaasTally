@@ -4,9 +4,9 @@ import { useActionState } from "react";
 import {
   createBestListAction,
   updateBestListAction,
-  initialBestListFormState,
   type BestListFormState,
 } from "@/app/(admin)/admin/best/actions";
+import { initialAdminFormState } from "@/lib/admin/form-types";
 import {
   Field,
   Fieldset,
@@ -52,7 +52,7 @@ export function BestListForm({
 
   const [state, formAction, isPending] = useActionState<BestListFormState, FormData>(
     isEdit ? updateBestListAction : createBestListAction,
-    initialBestListFormState,
+    initialAdminFormState,
   );
 
   const errors = state.fieldErrors ?? {};

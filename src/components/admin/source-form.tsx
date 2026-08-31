@@ -4,9 +4,9 @@ import { useActionState } from "react";
 import {
   createSourceAction,
   updateSourceAction,
-  initialSourceFormState,
   type SourceFormState,
 } from "@/app/(admin)/admin/sources/actions";
+import { initialAdminFormState } from "@/lib/admin/form-types";
 import {
   Field,
   Fieldset,
@@ -47,7 +47,7 @@ export function SourceForm({
 
   const [state, formAction, isPending] = useActionState<SourceFormState, FormData>(
     isEdit ? updateSourceAction : createSourceAction,
-    initialSourceFormState,
+    initialAdminFormState,
   );
 
   const errors = state.fieldErrors ?? {};
