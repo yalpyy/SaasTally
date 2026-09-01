@@ -42,7 +42,7 @@ Following a link to a vendor puts you on their site under their policy, not ours
 
 ## Your rights
 
-If you are in the UK, EU, Turkey or another jurisdiction with data protection rights, you may ask what we hold about you, ask for a copy, or ask us to delete it. Given the above, the honest answer will usually be that we hold nothing tied to you. Write to hello@saastally.com and we will answer.
+If you are in the UK, EU, Turkey or another jurisdiction with data protection rights, you may ask what we hold about you, ask for a copy, or ask us to delete it. Given the above, the honest answer will usually be that we hold nothing tied to you. Write to info@saastally.com and we will answer.
 
 ## Changes
 
@@ -50,7 +50,7 @@ If this policy changes materially we will update the date above rather than chan
 
 ## Contact
 
-hello@saastally.com`;
+info@saastally.com`;
 
 export default function Page() {
   return (

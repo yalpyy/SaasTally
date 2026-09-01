@@ -48,7 +48,7 @@ We may update these terms. Material changes move the date above.
 
 ## Contact
 
-hello@saastally.com`;
+info@saastally.com`;
 
 export default function Page() {
   return (

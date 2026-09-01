@@ -64,10 +64,10 @@ export default function ContactPage() {
         <p className="mt-2 text-sm leading-relaxed text-muted">
           Everything above reaches the same inbox:{" "}
           <a
-            href="mailto:hello@saastally.com"
+            href="mailto:info@saastally.com"
             className="text-foreground underline underline-offset-4"
           >
-            hello@saastally.com
+            info@saastally.com
           </a>
           . There is no contact form yet — a form that quietly discards messages would be worse than
           an address.
