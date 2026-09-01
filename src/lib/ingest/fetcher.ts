@@ -308,3 +308,74 @@ export async function fetchSource(url: string, options: FetchOptions = {}): Prom
     lastModified,
   };
 }
+
+/* ------------------------------------------------------------------------- */
+/* Images                                                                     */
+/* ------------------------------------------------------------------------- */
+
+/** A logo is an icon. Anything past this is a hero image we do not want. */
+const MAX_IMAGE_BYTES = 1_500_000;
+
+export type ImageFetch =
+  | { kind: "image"; bytes: Uint8Array; contentType: string }
+  | { kind: "error"; reason: string };
+
+/**
+ * Fetch a single image, under the same manners as a page fetch.
+ *
+ * Kept here rather than in the logo code so it shares the per-host throttle:
+ * a logo request is a second hit on a host we have just read, and the whole
+ * point of that throttle is that it counts every request, not just the ones
+ * that happen to be HTML.
+ *
+ * robots.txt is checked for images too. A vendor who disallows their asset
+ * directory has said something, and "it is only a favicon" is not a reason to
+ * ignore it.
+ */
+export async function fetchImage(url: string): Promise<ImageFetch> {
+  let parsed: URL;
+
+  try {
+    parsed = new URL(url);
+  } catch {
+    return { kind: "error", reason: "Not a valid URL" };
+  }
+
+  if (parsed.protocol !== "https:" && parsed.protocol !== "http:") {
+    return { kind: "error", reason: `Unsupported scheme ${parsed.protocol}` };
+  }
+
+  if (!(await isAllowedByRobots(url))) {
+    return { kind: "error", reason: "Disallowed by robots.txt" };
+  }
+
+  await waitForHost(parsed.host);
+
+  let response: Response;
+
+  try {
+    response = await withTimeout(url, {
+      headers: { "user-agent": USER_AGENT, accept: "image/*" },
+    });
+  } catch (error) {
+    return { kind: "error", reason: error instanceof Error ? error.message : "Fetch failed" };
+  }
+
+  if (!response.ok) return { kind: "error", reason: `HTTP ${response.status}` };
+
+  const contentType = response.headers.get("content-type") ?? "";
+  if (!contentType.toLowerCase().startsWith("image/")) {
+    // Sites commonly answer a missing /favicon.ico with an HTML 404 page at
+    // status 200. Storing that would put a text file where a logo goes.
+    return { kind: "error", reason: `Not an image (${contentType || "no content-type"})` };
+  }
+
+  const declared = Number(response.headers.get("content-length") ?? "0");
+  if (declared > MAX_IMAGE_BYTES) return { kind: "error", reason: "Image too large" };
+
+  const buffer = new Uint8Array(await response.arrayBuffer());
+  if (buffer.byteLength === 0) return { kind: "error", reason: "Empty response" };
+  if (buffer.byteLength > MAX_IMAGE_BYTES) return { kind: "error", reason: "Image too large" };
+
+  return { kind: "image", bytes: buffer, contentType };
+}

@@ -9,6 +9,7 @@ import {
   type ExtractedFacts,
 } from "./extract";
 import { factsFromMarkup } from "./metadata";
+import { collectToolLogo } from "./logo";
 import type { QueueClient } from "./queue";
 
 /**
@@ -40,6 +41,8 @@ export interface ApplyResult {
 interface ToolRow {
   id: string;
   name: string;
+  slug: string;
+  logo_url: string | null;
   active: boolean;
   human_reviewed: boolean;
   short_description: string | null;
@@ -120,7 +123,7 @@ export async function extractAndApply(
 
   const { data, error } = await supabase
     .from("tools")
-    .select("id, name, active, human_reviewed, short_description, description")
+    .select("id, name, slug, logo_url, active, human_reviewed, short_description, description")
     .eq("id", source.tool_id)
     .maybeSingle();
 
@@ -129,6 +132,16 @@ export async function extractAndApply(
   }
 
   const tool = data as unknown as ToolRow;
+
+  /**
+   * The logo, before anything else.
+   *
+   * Independent of the facts: a page can fail to state a single thing we would
+   * publish and still carry the vendor's own brand mark, and a catalogue of
+   * monogram tiles looks unfinished in a way that missing prose does not.
+   * `collectToolLogo` is a no-op once a logo exists, so re-runs cost nothing.
+   */
+  const logo = await collectToolLogo(supabase, tool, pageHtml, source.url);
 
   // Free first, and unconditionally: this is the vendor describing themselves.
   const markupFacts = factsFromMarkup(pageHtml);
@@ -161,10 +174,11 @@ export async function extractAndApply(
   const facts = mergeFacts(markupFacts, modelFacts);
 
   if (!facts) {
+    const why = usedModel ? "nothing extracted" : "no metadata on page, and no API key";
     return {
       applied: false,
       published: false,
-      detail: usedModel ? "nothing extracted" : "no metadata on page, and no API key",
+      detail: logo.stored ? `${why}, but ${logo.detail}` : why,
     };
   }
 
@@ -233,6 +247,7 @@ export async function extractAndApply(
   });
 
   const parts = ["facts applied"];
+  if (logo.stored) parts.push(logo.detail);
   if (published) parts.push("published");
   else if (!tool.active) parts.push("below publish bar, left as draft");
 

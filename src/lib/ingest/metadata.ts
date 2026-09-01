@@ -242,3 +242,94 @@ export function findPricingLink(html: string, baseUrl: string): string | null {
 
   return null;
 }
+
+/**
+ * Where a vendor's own logo might be, in the order worth trying.
+ *
+ * Deliberately not `og:image`. That tag is a link-preview banner — wide, often
+ * with a headline baked in — and dropping one into a 44px square tile looks
+ * worse than the monogram it replaced. What we want is the brand mark, and
+ * sites publish that in three places:
+ *
+ *  1. JSON-LD `logo`, when the site describes itself as an Organization. This
+ *     is the only one of the three that is explicitly *the logo*.
+ *  2. `apple-touch-icon` — square, usually 180px, and almost always the mark.
+ *  3. `rel="icon"` — the favicon, largest declared size first.
+ *
+ * Returned as a list rather than one answer because any of them can 404, be an
+ * SVG we cannot render, or be an HTML error page wearing a 200. The caller
+ * walks the list until something usable comes back.
+ */
+export function findLogoCandidates(html: string, baseUrl: string): string[] {
+  let base: URL;
+  try {
+    base = new URL(baseUrl);
+  } catch {
+    return [];
+  }
+
+  const candidates: string[] = [];
+
+  const add = (href: string | null | undefined) => {
+    if (!href) return;
+    try {
+      const resolved = new URL(href, base);
+      if (resolved.protocol !== "https:" && resolved.protocol !== "http:") return;
+      const url = resolved.toString();
+      if (!candidates.includes(url)) candidates.push(url);
+    } catch {
+      // A malformed href is one candidate lost, not a failed fetch.
+    }
+  };
+
+  // 1. JSON-LD.
+  for (const node of collectJsonLdNodes(html)) {
+    const logo = node.logo ?? node.image;
+    if (typeof logo === "string") add(decodeEntities(logo));
+    else if (logo && typeof logo === "object") {
+      add(asString((logo as Record<string, unknown>).url));
+    }
+  }
+
+  // 2 & 3. Link tags, larger declared sizes first within each group.
+  const links = html.match(/<link\b[^>]*>/gi) ?? [];
+
+  interface IconLink {
+    href: string;
+    size: number;
+    apple: boolean;
+  }
+
+  const icons: IconLink[] = [];
+
+  for (const tag of links) {
+    const rel = tag.match(/\brel\s*=\s*["']([^"']+)["']/i)?.[1].toLowerCase();
+    if (!rel) continue;
+
+    const tokens = rel.split(/\s+/);
+    const apple = tokens.includes("apple-touch-icon") || tokens.includes("apple-touch-icon-precomposed");
+    const icon = tokens.includes("icon") || tokens.includes("shortcut");
+    if (!apple && !icon) continue;
+
+    const href = tag.match(/\bhref\s*=\s*["']([^"']+)["']/i)?.[1];
+    if (!href) continue;
+
+    // "180x180", "any", or missing. Only the first tells us anything.
+    const sizes = tag.match(/\bsizes\s*=\s*["']([^"']+)["']/i)?.[1] ?? "";
+    const size = Number(sizes.match(/(\d+)\s*x\s*\d+/i)?.[1] ?? 0);
+
+    icons.push({ href: decodeEntities(href), size, apple });
+  }
+
+  icons.sort((a, b) => {
+    if (a.apple !== b.apple) return a.apple ? -1 : 1;
+    return b.size - a.size;
+  });
+
+  for (const icon of icons) add(icon.href);
+
+  // 4. The convention, for sites that declare nothing.
+  add(new URL("/favicon.ico", base).toString());
+
+  return candidates;
+}

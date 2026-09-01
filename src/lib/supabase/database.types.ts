@@ -25,6 +25,10 @@ export interface ToolRow {
   name: string;
   slug: string;
   logo_url: string | null;
+  /** Where a collected logo came from; null when an editor uploaded it. */
+  logo_source_url?: string | null;
+  /** Editor-supplied only: [{ path, url, caption }]. Never machine-written. */
+  screenshots?: { path: string; url: string; caption: string | null }[] | null;
   website_url: string;
   short_description: string | null;
   description: string | null;
