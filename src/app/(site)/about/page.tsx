@@ -42,7 +42,7 @@ Some outbound links are affiliate links, and we may earn a commission when you b
 
 ## Contact
 
-Corrections, vendor updates and questions: hello@saastally.com`;
+Corrections, vendor updates and questions: info@saastally.com`;
 
 export default function Page() {
   return (
