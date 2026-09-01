@@ -33,6 +33,23 @@ interface SourceRow {
 /** Excerpt kept for debugging a bad extraction. Not content, just a sample. */
 const EXCERPT_LENGTH = 2000;
 
+/** Whether this source's tool still has no logo, so the body is worth reading. */
+async function toolIsMissingLogo(
+  supabase: QueueClient,
+  toolId: string | null,
+): Promise<boolean> {
+  if (!toolId) return false;
+
+  const { data, error } = await supabase
+    .from("tools")
+    .select("logo_url")
+    .eq("id", toolId)
+    .maybeSingle();
+
+  if (error || !data) return false;
+  return !(data as unknown as { logo_url: string | null }).logo_url;
+}
+
 function nextRun(refreshHours: number): string {
   return new Date(Date.now() + refreshHours * 3_600_000).toISOString();
 }
@@ -56,10 +73,23 @@ export async function handleFetchSource(
 
   const source = data as unknown as SourceRow;
 
+  /**
+   * Conditional headers are an optimisation, and they are the wrong one when
+   * the tool is still missing something we can only read out of the page.
+   *
+   * A source fetched before logo collection existed has a stored hash and an
+   * ETag, so every later run comes back "unchanged" and the page body — the
+   * only place the vendor's logo is named — is never seen again. Asking for it
+   * in full, once, is what lets an existing catalogue catch up; as soon as the
+   * logo lands the condition stops being true and the fetch goes back to
+   * costing the vendor a 304.
+   */
+  const needsFullRead = await toolIsMissingLogo(supabase, source.tool_id);
+
   const outcome = await fetchSource(source.url, {
-    etag: source.etag,
-    lastModified: source.last_modified,
-    previousHash: source.content_hash,
+    etag: needsFullRead ? null : source.etag,
+    lastModified: needsFullRead ? null : source.last_modified,
+    previousHash: needsFullRead ? null : source.content_hash,
   });
 
   const fetchedAt = new Date().toISOString();

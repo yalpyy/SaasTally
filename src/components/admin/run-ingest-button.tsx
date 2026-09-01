@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useState } from "react";
-import { Loader2, Play } from "lucide-react";
+import { ImageIcon, Loader2, Play } from "lucide-react";
 import { runIngestNowAction } from "@/app/(admin)/admin/sources/actions";
 import { initialRunState, type RunState } from "@/app/(admin)/admin/sources/run-state";
 import { Card } from "@/components/ui/card";
@@ -36,6 +36,22 @@ export function RunIngestButton() {
             <Play className="size-4" aria-hidden="true" />
           )}
           {isPending ? "Running…" : "Run now"}
+        </button>
+
+        {/*
+          Same action, same queue — the only difference is which sources are
+          brought forward first. A backfill through a second code path would be
+          a second thing to keep correct.
+        */}
+        <button
+          type="submit"
+          name="mode"
+          value="logos"
+          disabled={isPending}
+          className="inline-flex h-10 items-center gap-2 rounded-xl border border-border px-4 text-sm font-medium transition-colors hover:bg-card-hover disabled:opacity-60"
+        >
+          <ImageIcon className="size-4" aria-hidden="true" />
+          Collect missing logos
         </button>
 
         {isPending ? (
