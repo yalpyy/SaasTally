@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowUpRight, GitCompareArrows, ImageIcon, Star } from "lucide-react";
+import Image from "next/image";
+import { ArrowUpRight, GitCompareArrows, Star } from "lucide-react";
 import { Container } from "@/components/ui/container";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -272,28 +273,43 @@ export default async function ToolPage({ params }: { params: Promise<{ slug: str
               </section>
             ) : null}
 
-            <section aria-labelledby="screenshots">
-              <h2 id="screenshots" className="text-xl font-semibold sm:text-2xl">
-                Screenshots
-              </h2>
-              <div className="mt-5 grid gap-4 sm:grid-cols-2">
-                {[0, 1].map((index) => (
-                  <div
-                    key={index}
-                    className="flex aspect-16/10 items-center justify-center rounded-card border border-dashed border-border bg-elevated text-subtle"
-                  >
-                    <span className="flex flex-col items-center gap-2 text-xs">
-                      <ImageIcon className="size-5" aria-hidden="true" />
-                      Awaiting editorial screenshot
-                    </span>
-                  </div>
-                ))}
-              </div>
-              <p className="mt-3 text-xs text-subtle">
-                Screenshots are uploaded by authors to the `tool-screenshots` bucket as evidence for
-                claims made on this page.
-              </p>
-            </section>
+            {tool.screenshots.length > 0 ? (
+              <section aria-labelledby="screenshots">
+                <h2 id="screenshots" className="text-xl font-semibold sm:text-2xl">
+                  Screenshots
+                </h2>
+
+                {/*
+                  Rendered only when there are some. The section used to show two
+                  dashed "awaiting screenshot" boxes on every tool, which made a
+                  finished page look unfinished on all of them at once.
+                */}
+                <ul className="mt-5 grid gap-4 sm:grid-cols-2">
+                  {tool.screenshots.map((shot) => (
+                    <li key={shot.path}>
+                      <figure>
+                        <div className="relative aspect-16/10 overflow-hidden rounded-card border border-border bg-elevated">
+                          <Image
+                            src={shot.url}
+                            alt={shot.caption ?? `${tool.name} screenshot`}
+                            fill
+                            sizes="(min-width: 1024px) 22rem, (min-width: 640px) 45vw, 100vw"
+                            className="object-cover"
+                          />
+                        </div>
+                        {shot.caption ? (
+                          <figcaption className="mt-2 text-xs text-subtle">{shot.caption}</figcaption>
+                        ) : null}
+                      </figure>
+                    </li>
+                  ))}
+                </ul>
+
+                <p className="mt-3 text-xs text-subtle">
+                  Screenshots are taken and uploaded by our editors — never collected automatically.
+                </p>
+              </section>
+            ) : null}
 
             {tool.verdict ? (
               <section aria-labelledby="verdict">

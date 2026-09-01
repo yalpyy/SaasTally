@@ -2,7 +2,7 @@ import { tools as fixtureTools } from "@/data/tools";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { createReadSupabase } from "@/lib/supabase/server";
 import type { ToolRow } from "@/lib/supabase/database.types";
-import type { PricingModel, Tool, ToolFaq, ToolPricingTier } from "@/types";
+import type { PricingModel, Tool, ToolFaq, ToolPricingTier, ToolScreenshot } from "@/types";
 
 /**
  * Tool reads.
@@ -17,6 +17,7 @@ function mapToolRow(row: ToolRow, categorySlugs: string[], sponsored: boolean): 
     name: row.name,
     slug: row.slug,
     logoUrl: row.logo_url,
+    screenshots: (row.screenshots as ToolScreenshot[] | null) ?? [],
     websiteUrl: row.website_url,
     shortDescription: row.short_description ?? "",
     description: row.description ?? "",

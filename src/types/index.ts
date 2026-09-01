@@ -44,11 +44,26 @@ export interface ToolFaq {
   answer: string;
 }
 
+/**
+ * A screenshot of the product, always supplied by a person.
+ *
+ * The ingest pipeline never writes these. A screenshot is a claim about what
+ * the product looks like today, made by whoever opened it — the same reason
+ * scores and verdicts are not machine-made.
+ */
+export interface ToolScreenshot {
+  /** Object path in the `tool-screenshots` bucket, kept so it can be deleted. */
+  path: string;
+  url: string;
+  caption: string | null;
+}
+
 export interface Tool {
   id: string;
   name: string;
   slug: string;
   logoUrl: string | null;
+  screenshots: ToolScreenshot[];
   websiteUrl: string;
   shortDescription: string;
   description: string;

@@ -23,3 +23,17 @@ export interface AdminFormState {
 }
 
 export const initialAdminFormState: AdminFormState = { status: "idle" };
+
+/**
+ * State for the media uploads, which are not editors.
+ *
+ * A screenshot upload has no field errors to echo and nothing to repopulate —
+ * a file input cannot be given a value back — but it does have a success
+ * worth reporting, which the editor states deliberately do not.
+ */
+export interface UploadFormState {
+  status: "idle" | "error" | "done";
+  message?: string;
+}
+
+export const initialUploadFormState: UploadFormState = { status: "idle" };
