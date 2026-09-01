@@ -3,8 +3,9 @@ import { initials } from "@/lib/utils/format";
 import { cn } from "@/lib/utils/cn";
 
 /**
- * We never ship third-party brand assets in the repo. When a tool has no
- * uploaded logo in Supabase Storage we render a neutral monogram tile instead.
+ * We never ship third-party brand assets in the repo — a logo is either
+ * collected by the ingest pipeline into Supabase Storage or absent, and an
+ * absent one renders as a neutral monogram tile.
  */
 export function ToolLogo({
   name,
@@ -30,6 +31,11 @@ export function ToolLogo({
           alt={`${name} logo`}
           width={size}
           height={size}
+          // The optimiser refuses SVG unless the app opts into serving
+          // untrusted markup, so these are passed through as a plain <img>.
+          // That is also what makes them safe: script in an SVG does not run
+          // when the file is the source of an image element.
+          unoptimized={src.endsWith(".svg")}
           className="size-full object-contain p-1.5"
         />
       </span>

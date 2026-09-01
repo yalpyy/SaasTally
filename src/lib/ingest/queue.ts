@@ -142,6 +142,42 @@ export async function enqueueDueSources(supabase: QueueClient, limit = 100): Pro
   return queued;
 }
 
+/**
+ * Bring forward the sources of tools that still have no logo.
+ *
+ * Logo collection arrived after the catalogue was already populated, so those
+ * sources are all sitting on a `next_run_at` days away and nothing would read
+ * their pages again until then. This says: those specific ones, now.
+ *
+ * Narrow on purpose. It moves only sources whose tool is missing a logo, so
+ * running it twice in a row is close to a no-op — the first pass fills the
+ * logos in and the second finds nothing to move.
+ */
+export async function markLogolessSourcesDue(
+  supabase: QueueClient,
+  limit = 200,
+): Promise<number> {
+  const { data: tools, error } = await supabase
+    .from("tools")
+    .select("id")
+    .is("logo_url", null)
+    .limit(limit);
+
+  if (error || !tools || tools.length === 0) return 0;
+
+  const toolIds = (tools as { id: string }[]).map((tool) => tool.id);
+
+  const { data: updated, error: updateError } = await supabase
+    .from("content_sources")
+    .update({ next_run_at: new Date().toISOString() })
+    .in("tool_id", toolIds)
+    .eq("active", true)
+    .select("id");
+
+  if (updateError || !updated) return 0;
+  return updated.length;
+}
+
 /** Recover jobs whose run died mid-flight — a timeout, a redeploy, a crash. */
 export async function releaseStaleJobs(supabase: QueueClient, olderThanMinutes = 15): Promise<void> {
   const cutoff = new Date(Date.now() - olderThanMinutes * 60_000).toISOString();

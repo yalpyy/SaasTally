@@ -1,6 +1,7 @@
 import "server-only";
 
 import { createServerSupabase } from "@/lib/supabase/server";
+import type { ToolScreenshot } from "@/types";
 
 /**
  * Admin-scoped tool reads.
@@ -29,6 +30,7 @@ export interface EditableTool {
   rating: string;
   foundedYear: string;
   logoUrl: string | null;
+  screenshots: ToolScreenshot[];
   /** Newline-separated, matching how the textareas collect them. */
   features: string;
   pros: string;
@@ -55,6 +57,7 @@ interface ToolEditRow {
   rating: number | null;
   founded_year: number | null;
   logo_url: string | null;
+  screenshots: ToolScreenshot[] | null;
   features: string[] | null;
   pros: string[] | null;
   cons: string[] | null;
@@ -98,6 +101,7 @@ export async function getToolForEdit(id: string): Promise<EditableTool | null> {
     rating: num(row.rating),
     foundedYear: num(row.founded_year),
     logoUrl: row.logo_url,
+    screenshots: row.screenshots ?? [],
     features: lines(row.features),
     pros: lines(row.pros),
     cons: lines(row.cons),

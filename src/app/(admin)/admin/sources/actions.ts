@@ -16,6 +16,7 @@ import {
 } from "@/lib/validation/content-source";
 import { requireStaff } from "@/lib/auth";
 import { runIngestBatch } from "@/lib/ingest/runner";
+import { ingestClient, markLogolessSourcesDue } from "@/lib/ingest/queue";
 import type { RunState } from "./run-state";
 
 export type SourceFormState = AdminFormState;
@@ -109,16 +110,31 @@ export async function updateSourceAction(
  * than being killed halfway with nothing to show.
  */
 export async function runIngestNowAction(
-  // Both arguments are required by useActionState's signature; this action
-  // takes no input, it just runs.
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  // Required by useActionState's signature; the run takes no prior state.
   _prevState: RunState,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  _formData: FormData,
+  formData: FormData,
 ): Promise<RunState> {
   await requireStaff();
 
-  const summary = await runIngestBatch(45_000, "admin");
+  /**
+   * "logos" mode exists because the schedule is the wrong tool for a backfill.
+   * Every source in an already-populated catalogue is days from its next run,
+   * so a plain run would report "nothing was due" while 43 tools sat there
+   * with no logo. This brings exactly those sources forward and then runs the
+   * ordinary batch — no separate code path doing the work differently.
+   */
+  const logosOnly = text(formData, "mode") === "logos";
+  let brought = 0;
+
+  if (logosOnly) {
+    const supabase = ingestClient();
+    if (!supabase) {
+      return { status: "error", message: "Collecting logos needs SUPABASE_SECRET_KEY." };
+    }
+    brought = await markLogolessSourcesDue(supabase);
+  }
+
+  const summary = await runIngestBatch(45_000, logosOnly ? "admin-logos" : "admin");
 
   if (!summary.ok) {
     return { status: "error", message: summary.error ?? "Could not start the run." };
@@ -131,8 +147,12 @@ export async function runIngestNowAction(
     status: "done",
     message:
       summary.processed === 0 && summary.queued === 0
-        ? "Nothing was due. Sources are re-checked on their own schedule."
-        : `Processed ${summary.processed}, failed ${summary.failed}.`,
+        ? logosOnly
+          ? "Every tool already has a logo."
+          : "Nothing was due. Sources are re-checked on their own schedule."
+        : `Processed ${summary.processed}, failed ${summary.failed}.${
+            logosOnly && brought > 0 ? ` ${brought} source${brought === 1 ? "" : "s"} brought forward.` : ""
+          }`,
     processed: summary.processed,
     failed: summary.failed,
     remaining: summary.remaining,

@@ -12,6 +12,7 @@ export const tools: Tool[] = [
     name: "Semrush",
     slug: "semrush",
     logoUrl: null,
+    screenshots: [],
     websiteUrl: "https://www.semrush.com",
     shortDescription: "SEO & competitive research",
     description:
@@ -91,6 +92,7 @@ export const tools: Tool[] = [
     name: "Ahrefs",
     slug: "ahrefs",
     logoUrl: null,
+    screenshots: [],
     websiteUrl: "https://ahrefs.com",
     shortDescription: "Backlink analysis and keyword research",
     description:
@@ -158,6 +160,7 @@ export const tools: Tool[] = [
     name: "Notion",
     slug: "notion",
     logoUrl: null,
+    screenshots: [],
     websiteUrl: "https://www.notion.so",
     shortDescription: "Docs, wikis and lightweight databases",
     description:
@@ -224,6 +227,7 @@ export const tools: Tool[] = [
     name: "Shopify",
     slug: "shopify",
     logoUrl: null,
+    screenshots: [],
     websiteUrl: "https://www.shopify.com",
     shortDescription: "Hosted e-commerce platform",
     description:
@@ -290,6 +294,7 @@ export const tools: Tool[] = [
     name: "HubSpot",
     slug: "hubspot",
     logoUrl: null,
+    screenshots: [],
     websiteUrl: "https://www.hubspot.com",
     shortDescription: "CRM and marketing automation",
     description:
@@ -356,6 +361,7 @@ export const tools: Tool[] = [
     name: "Hostinger",
     slug: "hostinger",
     logoUrl: null,
+    screenshots: [],
     websiteUrl: "https://www.hostinger.com",
     shortDescription: "Budget-friendly web hosting",
     description:
