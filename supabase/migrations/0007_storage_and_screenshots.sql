@@ -43,12 +43,17 @@ alter table public.tools
 --
 -- MIME types are restricted at the bucket, not just in application code:
 -- storage is reachable with any staff token, and "only images" should not
--- depend on our upload form being the only caller. SVG is deliberately absent
--- — it is a script-bearing document, and the image optimiser refuses it.
+-- depend on our upload form being the only caller.
+--
+-- SVG is allowed for logos and nowhere else. Most vendors publish their mark
+-- as SVG, so refusing it would lose the best copy of the very thing we came
+-- for. It is rendered through a plain <img>, which does not execute script in
+-- an SVG, and it is never accepted from an upload form — only fetched from the
+-- vendor's own site by the pipeline.
 -- ---------------------------------------------------------------------------
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 values
-  ('tool-logos',       'tool-logos',       true, 2097152,  array['image/png','image/jpeg','image/webp','image/gif']),
+  ('tool-logos',       'tool-logos',       true, 2097152,  array['image/png','image/jpeg','image/webp','image/gif','image/svg+xml']),
   ('tool-screenshots', 'tool-screenshots', true, 8388608,  array['image/png','image/jpeg','image/webp']),
   ('article-images',   'article-images',   true, 8388608,  array['image/png','image/jpeg','image/webp']),
   ('authors',          'authors',          true, 2097152,  array['image/png','image/jpeg','image/webp']),

@@ -33,18 +33,24 @@ export type BucketName = (typeof BUCKETS)[keyof typeof BUCKETS];
 export const ALL_BUCKETS: BucketName[] = Object.values(BUCKETS);
 
 /**
- * Types we are willing to store and can actually render.
+ * Types a collected logo may be.
  *
- * `next/image` will not optimise SVG unless the app opts into serving
- * untrusted markup, and it cannot decode ICO at all, so accepting either would
- * mean storing files that render as a broken image. Better to reject them at
- * the door than to discover it on the page.
+ * SVG is here because that is how most vendors publish their mark, and
+ * refusing it would throw away the best copy of the thing we came for. It is
+ * rendered through a plain `<img>` — `ToolLogo` marks SVG sources unoptimized —
+ * which does not execute script inside the file the way an inlined `<svg>` or
+ * an iframe would.
+ *
+ * ICO is not here, and cannot be: the image optimiser has no decoder for it,
+ * so storing one would put a broken image on 40 pages. A site whose only icon
+ * is an `.ico` falls through to the next candidate instead.
  */
 export const IMAGE_MIME_EXTENSIONS: Record<string, string> = {
   "image/png": "png",
   "image/jpeg": "jpg",
   "image/webp": "webp",
   "image/gif": "gif",
+  "image/svg+xml": "svg",
 };
 
 export function extensionForMime(contentType: string): string | null {
