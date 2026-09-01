@@ -15,16 +15,49 @@ export function MobileNav() {
 
   useEffect(() => setOpen(false), [pathname]);
 
+  /**
+   * Lock the page behind the menu.
+   *
+   * `overflow: hidden` on the body alone does not stop iOS Safari scrolling
+   * the document, and a page that keeps moving under an open menu is how the
+   * content behind ends up showing at the edges — Safari collapses its address
+   * bar as you scroll, and the viewport grows out from under a fixed overlay.
+   *
+   * Pinning the body and offsetting it by the current scroll position holds it
+   * still on every browser. The offset has to be put back on close, or leaving
+   * the menu jumps the reader to the top of the page.
+   */
   useEffect(() => {
     if (!open) return;
-    const { overflow } = document.body.style;
-    document.body.style.overflow = "hidden";
+
+    const body = document.body;
+    const scrollY = window.scrollY;
+    const previous = {
+      position: body.style.position,
+      top: body.style.top,
+      left: body.style.left,
+      right: body.style.right,
+      overflow: body.style.overflow,
+    };
+
+    body.style.position = "fixed";
+    body.style.top = `-${scrollY}px`;
+    body.style.left = "0";
+    body.style.right = "0";
+    body.style.overflow = "hidden";
+
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") setOpen(false);
     };
     document.addEventListener("keydown", onKeyDown);
+
     return () => {
-      document.body.style.overflow = overflow;
+      body.style.position = previous.position;
+      body.style.top = previous.top;
+      body.style.left = previous.left;
+      body.style.right = previous.right;
+      body.style.overflow = previous.overflow;
+      window.scrollTo(0, scrollY);
       document.removeEventListener("keydown", onKeyDown);
     };
   }, [open]);
@@ -48,7 +81,12 @@ export function MobileNav() {
             role="dialog"
             aria-modal="true"
             aria-label="Site menu"
-            className="fixed inset-0 z-[90] bg-background lg:hidden"
+            // min-h-dvh, not just inset-0: on iOS the layout viewport is the
+            // taller one with the address bar hidden, so an overlay sized to
+            // it can fall short of the visible area and let the page show
+            // through at the bottom. Scrollable so a long menu still reaches
+            // its footer on a short screen.
+            className="fixed inset-0 z-[90] min-h-dvh overflow-y-auto bg-background lg:hidden"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
